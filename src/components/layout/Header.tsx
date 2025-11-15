@@ -3,23 +3,25 @@
 import * as React from "react";
 import Link from "next/link";
 import { Menu, Truck } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 const navLinks = [
-  { href: "#services", label: "Services" },
-  { href: "#why-us", label: "Why Us" },
-  { href: "#roadmap", label: "Roadmap" },
-  { href: "#testimonials", label: "Testimonials" },
-  { href: "#faq", label: "FAQ" },
-  { href: "#book", label: "Book a Call" },
+  { href: "/#services", label: "Services" },
+  { href: "/#why-us", label: "Why Us" },
+  { href: "/#roadmap", label: "Roadmap" },
+  { href: "/#testimonials", label: "Testimonials" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/#book", label: "Book a Call" },
 ];
 
 const NavLink = ({
@@ -47,6 +49,14 @@ const NavLink = ({
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push("/");
+  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -69,10 +79,31 @@ export default function Header() {
           <span className="font-bold text-lg text-foreground">Dispatch Pro</span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-4 md:flex">
           {navLinks.map((link) => (
             <NavLink key={link.href} {...link} />
           ))}
+           <div className="flex items-center gap-2">
+            {!isUserLoading &&
+              (user ? (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </Button>
+                  <Button variant="outline" onClick={handleLogout}>Logout</Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">Login</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href="/register">Register</Link>
+
+                  </Button>
+                </>
+              ))}
+          </div>
         </nav>
 
         <div className="md:hidden">
@@ -95,6 +126,28 @@ export default function Header() {
                         <NavLink {...link} className="text-lg" />
                      </SheetClose>
                   ))}
+                   <div className="border-t pt-4 flex flex-col gap-4">
+                    {!isUserLoading &&
+                      (user ? (
+                        <>
+                          <SheetClose asChild>
+                            <NavLink href="/dashboard" label="Dashboard" className="text-lg"/>
+                          </SheetClose>
+                           <Button variant="outline" onClick={handleLogout}>Logout</Button>
+                        </>
+                      ) : (
+                        <>
+                           <SheetClose asChild>
+                             <NavLink href="/login" label="Login" className="text-lg"/>
+                          </SheetClose>
+                          <SheetClose asChild>
+                             <Button asChild>
+                                <Link href="/register">Register</Link>
+                             </Button>
+                          </SheetClose>
+                        </>
+                      ))}
+                  </div>
                 </nav>
               </div>
             </SheetContent>
