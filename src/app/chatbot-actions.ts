@@ -8,9 +8,17 @@ const MessageSchema = z.object({
   content: z.string(),
 });
 
+const UserDetailsSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  company: z.string().optional(),
+});
+
+
 const ChatRequestSchema = z.object({
   history: z.array(MessageSchema),
   message: z.string().min(1, 'Message cannot be empty.'),
+  userDetails: UserDetailsSchema,
 });
 
 interface ChatState {
@@ -25,12 +33,14 @@ export async function chatAction(
   let validatedFields;
   try {
     const history = JSON.parse(formData.get('history') as string);
+    const userDetails = JSON.parse(formData.get('userDetails') as string);
     validatedFields = ChatRequestSchema.safeParse({
       history: history,
       message: formData.get('message'),
+      userDetails: userDetails,
     });
   } catch (error) {
-    return {error: 'Invalid history format.'};
+    return {error: 'Invalid form data format.'};
   }
 
   if (!validatedFields.success) {
