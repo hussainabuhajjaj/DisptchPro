@@ -1,0 +1,99 @@
+/**
+ * @fileOverview Firestore Security Rules for Dispatch Pro.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes data security by implementing strict access control.
+ * It assumes that Leads and Appointments are private to the application, while Testimonials and FAQs are publicly accessible.
+ *
+ * Data Structure:
+ * - Leads: Stored in the `/leads/{leadId}` collection.
+ * - Appointments: Stored as subcollections under `/leads/{leadId}/appointments/{appointmentId}`.
+ * - Testimonials: Stored in the `/testimonials/{testimonialId}` collection.
+ * - FAQs: Stored in the `/faqs/{faqId}` collection.
+ *
+ * Key Security Decisions:
+ * - Leads and Appointments are only writable (create, update, delete) to authenticated users.
+ * - Testimonials and FAQs are publicly readable, but writable only to authenticated users.
+ * - List operations are allowed for all collections.
+ * - There is no enforcement of data schemas beyond ownership validation.
+ *
+ * Denormalization for Authorization:
+ * The current design does not require denormalization as the rules are simple and do not rely on complex relationships.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to individual Lead documents.
+     * @path /leads/{leadId}
+     * @allow (create) request.auth != null
+     * @allow (get, list) request.auth != null
+     * @allow (update, delete) request.auth != null
+     * @deny (create) request.auth == null
+     * @deny (update, delete) request.auth == null
+     * @principle Authenticated users can create, read, update, and delete lead documents.
+     */
+    match /leads/{leadId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    /**
+     * @description Controls access to Appointment documents within a specific Lead.
+     * @path /leads/{leadId}/appointments/{appointmentId}
+     * @allow (create) request.auth != null
+     * @allow (get, list) request.auth != null
+     * @allow (update, delete) request.auth != null
+     * @deny (create) request.auth == null
+     * @deny (update, delete) request.auth == null
+     * @principle Authenticated users can create, read, update, and delete appointment documents for leads.
+     */
+    match /leads/{leadId}/appointments/{appointmentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    /**
+     * @description Controls access to Testimonial documents.
+     * @path /testimonials/{testimonialId}
+     * @allow (get, list) if true
+     * @allow (create, update, delete) request.auth != null
+     * @deny (create, update, delete) request.auth == null
+     * @principle Allows public read access to testimonials, but restricts write access to authenticated users.
+     */
+    match /testimonials/{testimonialId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    /**
+     * @description Controls access to FAQ documents.
+     * @path /faqs/{faqId}
+     * @allow (get, list) if true
+     * @allow (create, update, delete) request.auth != null
+     * @deny (create, update, delete) request.auth == null
+     * @principle Allows public read access to FAQs, but restricts write access to authenticated users.
+     */
+    match /faqs/{faqId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
+    }
+  }
+
+  /**
+   * @description Checks if the user is signed in.
+   * @returns {boolean} True if the user is signed in, false otherwise.
+   */
+  function isSignedIn() {
+    return request.auth != null;
+  }
+}

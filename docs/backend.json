@@ -1,0 +1,245 @@
+{
+  "entities": {
+    "Lead": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Lead",
+      "type": "object",
+      "description": "Represents a potential client lead captured through the web form.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Lead entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "First name of the lead."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the lead."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the lead.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the lead."
+        },
+        "serviceOfInterest": {
+          "type": "string",
+          "description": "The specific dispatching service the lead is interested in."
+        },
+        "message": {
+          "type": "string",
+          "description": "Additional message or notes from the lead."
+        },
+        "dateCreated": {
+          "type": "string",
+          "description": "Date and time when the lead was captured.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "phone",
+        "serviceOfInterest",
+        "dateCreated"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents a consultation call appointment booked through the calendar system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Appointment entity."
+        },
+        "leadId": {
+          "type": "string",
+          "description": "Reference to the Lead who booked the appointment. (Relationship: Lead 1:N Appointment)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time of the appointment.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End time of the appointment.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the appointment (e.g., 'Booked', 'Confirmed', 'Cancelled')."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any additional notes related to the appointment."
+        }
+      },
+      "required": [
+        "id",
+        "leadId",
+        "startTime",
+        "endTime",
+        "status"
+      ]
+    },
+    "Testimonial": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Testimonial",
+      "type": "object",
+      "description": "Represents a testimonial or success story from a client.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Testimonial entity."
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Name of the client providing the testimonial."
+        },
+        "clientTitle": {
+          "type": "string",
+          "description": "Title or position of the client."
+        },
+        "testimonialText": {
+          "type": "string",
+          "description": "The actual text of the testimonial."
+        },
+        "dateCreated": {
+          "type": "string",
+          "description": "Date and time when the testimonial was created.",
+          "format": "date-time"
+        },
+        "imageURL": {
+          "type": "string",
+          "description": "URL of the image to go with the testimonial"
+        }
+      },
+      "required": [
+        "id",
+        "clientName",
+        "testimonialText",
+        "dateCreated"
+      ]
+    },
+    "FAQ": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FAQ",
+      "type": "object",
+      "description": "Represents a frequently asked question and its answer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the FAQ entity."
+        },
+        "question": {
+          "type": "string",
+          "description": "The question being asked."
+        },
+        "answer": {
+          "type": "string",
+          "description": "The answer to the question."
+        },
+        "dateCreated": {
+          "type": "string",
+          "description": "Date and time when the FAQ was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "answer",
+        "dateCreated"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/leads/{leadId}",
+        "definition": {
+          "entityName": "Lead",
+          "schema": {
+            "$ref": "#/backend/entities/Lead"
+          },
+          "description": "Stores lead information captured from the web form.",
+          "params": [
+            {
+              "name": "leadId",
+              "description": "Unique identifier for the lead document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/leads/{leadId}/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Stores appointment information for a specific lead.",
+          "params": [
+            {
+              "name": "leadId",
+              "description": "Unique identifier for the lead document."
+            },
+            {
+              "name": "appointmentId",
+              "description": "Unique identifier for the appointment document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/testimonials/{testimonialId}",
+        "definition": {
+          "entityName": "Testimonial",
+          "schema": {
+            "$ref": "#/backend/entities/Testimonial"
+          },
+          "description": "Stores client testimonial information.",
+          "params": [
+            {
+              "name": "testimonialId",
+              "description": "Unique identifier for the testimonial document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/faqs/{faqId}",
+        "definition": {
+          "entityName": "FAQ",
+          "schema": {
+            "$ref": "#/backend/entities/FAQ"
+          },
+          "description": "Stores frequently asked questions and their answers.",
+          "params": [
+            {
+              "name": "faqId",
+              "description": "Unique identifier for the FAQ document."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support the Dispatch Pro application's core features, focusing on lead capture, appointment booking, testimonials, and FAQs. \n\nLeads and Appointments are structured to maintain a clear relationship between them. Appointments are stored as subcollections of Leads to reflect the 1:N relationship (one lead can have multiple appointments). This approach ensures data locality and simplifies queries related to a specific lead's appointments.\n\nTestimonials and FAQs are stored in root-level collections. This segregation is done as these entities do not have explicit ownership and are designed to be generally accessed.\n\n*Authorization Independence*: To ensure authorization independence, we avoid `get()` calls in the rules. Since appointments are in a subcollection of leads, any authorization-related information for appointments MUST be denormalized into the Appointment documents themselves. However, given the current requirements, this denormalization isn't strictly needed, as no specific user roles or access control are described.\n\n*QAPs (Rules are not Filters)*: The proposed structure supports secure `list` operations. Since Testimonials and FAQs are in root collections with homogeneous data, filtering can be done using query constraints without compromising security. The Leads and Appointments collections will also support simple rules, even though no specific rules are defined in the current context."
+  }
+}
