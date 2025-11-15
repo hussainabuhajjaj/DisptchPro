@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -93,15 +94,9 @@ export default function Header() {
                   <Button variant="outline" onClick={handleLogout}>Logout</Button>
                 </>
               ) : (
-                <>
-                  <Button variant="ghost" asChild>
-                    <Link href="/login">Login</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link href="/register">Register</Link>
-
-                  </Button>
-                </>
+                <Button asChild>
+                  <Link href="/register">Get Started</Link>
+                </Button>
               ))}
           </div>
         </nav>
@@ -136,16 +131,11 @@ export default function Header() {
                            <Button variant="outline" onClick={handleLogout}>Logout</Button>
                         </>
                       ) : (
-                        <>
-                           <SheetClose asChild>
-                             <NavLink href="/login" label="Login" className="text-lg"/>
-                          </SheetClose>
                           <SheetClose asChild>
                              <Button asChild>
-                                <Link href="/register">Register</Link>
+                                <Link href="/register">Get Started</Link>
                              </Button>
                           </SheetClose>
-                        </>
                       ))}
                   </div>
                 </nav>
