@@ -1,6 +1,8 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,7 +34,7 @@ function SubmitButton() {
 }
 
 export default function Booking() {
-  const [state, formAction] = useFormState(bookConsultationAction, initialState);
+  const [state, formAction] = useActionState(bookConsultationAction, initialState);
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>(new Date());
   

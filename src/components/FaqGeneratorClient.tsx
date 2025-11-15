@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { generateFaqAction } from "@/app/actions";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -32,7 +33,7 @@ function SubmitButton() {
 }
 
 export default function FaqGeneratorClient() {
-  const [state, formAction] = useFormState(generateFaqAction, initialState);
+  const [state, formAction] = useActionState(generateFaqAction, initialState);
 
   return (
     <>
