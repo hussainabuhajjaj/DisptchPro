@@ -9,7 +9,8 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {generate} from 'genkit';
+import {z} from 'zod';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -38,7 +39,14 @@ export async function chat(input: ChatInput): Promise<ChatOutput> {
   return chatFlow(input);
 }
 
-const systemPrompt = `You are a dispatch expert for a company called Dispatch Pro. Your main goal is to convince carriers (owner-operators and small fleets) to start working with us.
+const chatFlow = ai.defineFlow(
+  {
+    name: 'chatFlow',
+    inputSchema: ChatInputSchema,
+    outputSchema: ChatOutputSchema,
+  },
+  async ({history, message, userDetails}) => {
+    const systemPrompt = `You are a dispatch expert for a company called Dispatch Pro. Your main goal is to convince carriers (owner-operators and small fleets) to start working with us.
 
 You are an expert in logistics, load matching, and maximizing profits for truckers. Your tone should be confident, knowledgeable, and persuasive.
 
@@ -60,32 +68,21 @@ Your conversation strategy:
 5.  If you don't know an answer, professionally state that you can get the details and encourage them to book a call for a deeper conversation.
 
 The user you are chatting with has provided the following details:
-Name: {{userDetails.name}}
-Email: {{userDetails.email}}
-Company: {{userDetails.company}}
+Name: ${userDetails.name}
+Email: ${userDetails.email}
+Company: ${userDetails.company || 'Not provided'}
 `;
 
-const chatFlow = ai.defineFlow(
-  {
-    name: 'chatFlow',
-    inputSchema: ChatInputSchema,
-    outputSchema: ChatOutputSchema,
-  },
-  async ({history, message, userDetails}) => {
-
-    const augmentedHistory = [
-        {role: 'system' as const, content: systemPrompt},
-        ...history,
-    ]
-
-    const chat = ai.model.history(augmentedHistory.map(h => ({role: h.role, parts: [{text: h.content}]})));
-
-    const {output} = await chat.send(message, {
-      generationConfig: {
-        context: {
-          userDetails
-        }
-      }
+    const {output} = await generate({
+      model: ai.model,
+      history: [
+        {role: 'system', content: [{text: systemPrompt}]},
+        ...history.map(h => ({
+          role: h.role,
+          content: [{text: h.content}],
+        })),
+      ],
+      prompt: message,
     });
 
     return {
