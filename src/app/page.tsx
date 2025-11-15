@@ -1,6 +1,7 @@
 import Hero from "@/components/sections/Hero";
 import Services from "@/components/sections/Services";
 import WhyChooseUs from "@/components/sections/WhyChooseUs";
+import ProfitCalculator from "@/components/sections/ProfitCalculator";
 import Roadmap from "@/components/sections/Roadmap";
 import Testimonials from "@/components/sections/Testimonials";
 import FaqSection from "@/components/sections/FaqSection";
@@ -12,6 +13,7 @@ export default function Home() {
       <Hero />
       <Services />
       <WhyChooseUs />
+      <ProfitCalculator />
       <Roadmap />
       <Testimonials />
       <FaqSection />
