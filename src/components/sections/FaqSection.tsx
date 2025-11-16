@@ -1,4 +1,4 @@
-import { Wand2 } from "lucide-react";
+import { WandSparkles } from "lucide-react";
 import FaqGeneratorClient from "../FaqGeneratorClient";
 
 export default function FaqSection() {
@@ -7,7 +7,7 @@ export default function FaqSection() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary font-medium px-4 py-1 rounded-full mb-4">
-            <Wand2 className="h-5 w-5" />
+            <WandSparkles className="h-5 w-5" />
             <span>AI-Powered Tool</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">

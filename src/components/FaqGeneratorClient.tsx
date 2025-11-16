@@ -7,7 +7,7 @@ import { generateFaqAction } from "@/app/actions";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Wand2, LoaderCircle } from "lucide-react";
+import { WandSparkles, LoaderCircle } from "lucide-react";
 
 const initialState = {
   message: "",
@@ -24,7 +24,7 @@ function SubmitButton() {
         </>
       ) : (
         <>
-          <Wand2 className="mr-2 h-4 w-4" />
+          <WandSparkles className="mr-2 h-4 w-4" />
           Generate Answers
         </>
       )}
