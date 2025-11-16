@@ -26,9 +26,9 @@
     },
     {
       "id": "why-choose-us",
-      "description": "A smiling truck driver looking out from the cabin of their truck.",
-      "imageUrl": "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0cnVjayUyMGRyaXZlcnxlbnwwfHx8fDE3NjMyMjAwMDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "truck driver"
+      "description": "A logistics control center with multiple screens showing maps and data.",
+      "imageUrl": "https://images.unsplash.com/photo-1616445514247-c008b6a3782d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsb2dpc3RpY3MlMjBjb250cm9sJTIwcm9vbXxlbnwwfHx8fDE3NjM4MjQ0ODZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "logistics control"
     }
   ]
 }
