@@ -13,6 +13,8 @@ import { bookConsultationAction } from "@/app/actions";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { LoaderCircle, CheckCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { add } from "date-fns";
 
 const initialState = {
   message: "",
@@ -33,10 +35,16 @@ function SubmitButton() {
   );
 }
 
+const timeSlots = [
+    "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
+    "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"
+];
+
 export default function Booking() {
   const [state, formAction] = useActionState(bookConsultationAction, initialState);
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [time, setTime] = useState<string | undefined>(timeSlots[0]);
   
   useEffect(() => {
     if (state.message) {
@@ -61,6 +69,22 @@ export default function Booking() {
     );
   }
 
+  const getDateTimeString = () => {
+    if (!date || !time) return "";
+    const [hour, minute, ampm] = time.match(/(\d+):(\d+) (AM|PM)/)!.slice(1);
+    let h = parseInt(hour, 10);
+    if (ampm === "PM" && h !== 12) {
+      h += 12;
+    }
+    if (ampm === "AM" && h === 12) {
+      h = 0;
+    }
+    const newDate = new Date(date);
+    newDate.setHours(h);
+    newDate.setMinutes(parseInt(minute, 10));
+    return newDate.toISOString();
+  }
+
   return (
     <section id="book" className="w-full py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6">
@@ -75,7 +99,7 @@ export default function Booking() {
 
         <Card className="max-w-4xl mx-auto shadow-lg">
           <div className="grid md:grid-cols-2 md:divide-x">
-            <div className="p-6 flex justify-center items-center">
+            <div className="p-6 flex flex-col justify-center items-center gap-4">
               <Calendar
                 mode="single"
                 selected={date}
@@ -83,6 +107,19 @@ export default function Booking() {
                 className="p-0"
                 disabled={(day) => day < new Date(new Date().setDate(new Date().getDate() - 1))}
               />
+               <div className="w-full max-w-xs space-y-2">
+                <Label htmlFor="time">Select a Time</Label>
+                <Select value={time} onValueChange={setTime}>
+                  <SelectTrigger id="time">
+                    <SelectValue placeholder="Select a time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map(slot => (
+                      <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+               </div>
             </div>
             <div className="p-6">
               <CardHeader className="p-0 mb-6">
@@ -91,7 +128,7 @@ export default function Booking() {
               </CardHeader>
               <CardContent className="p-0">
                 <form action={formAction} className="space-y-4">
-                  <input type="hidden" name="date" value={date?.toISOString() ?? ""} />
+                  <input type="hidden" name="date" value={getDateTimeString()} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>

@@ -45,7 +45,7 @@ const bookingSchema = z.object({
   email: z.string().email("Invalid email address."),
   phone: z.string().optional(),
   message: z.string().optional(),
-  date: z.string().optional(),
+  date: z.string().datetime("Please select a valid date and time."),
 });
 
 export async function bookConsultationAction(prevState: FormState, formData: FormData): Promise<FormState> {
