@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -391,10 +391,56 @@ export default function CarrierProfileForm() {
   const methods = useForm<FullFormValues>({
     resolver: zodResolver(fullFormSchema),
     defaultValues: {
-      carrierInfo: {},
-      equipmentInfo: {},
+      carrierInfo: {
+        companyName: '',
+        dba: '',
+        physicalAddress: '',
+        physicalCity: '',
+        physicalState: '',
+        physicalZip: '',
+        mailingAddress: '',
+        mailingCity: '',
+        mailingState: '',
+        mailingZip: '',
+        mainContact: '',
+        email: '',
+        officePhone: '',
+        fax: '',
+        cellPhone: '',
+        emergencyContact: '',
+        emergencyPhone: '',
+        mcNumber: '',
+        dotNumber: '',
+        einNumber: '',
+        scacCode: '',
+        twicCertified: '',
+        hazmatCertified: '',
+      },
+      equipmentInfo: {
+        numTrucks: '',
+        companyDrivers: '',
+        ownerOperators: '',
+        teamDrivers: '',
+        numTrailers: '',
+        vanTrailers: '',
+        reeferTrailers: '',
+        flatbedTrailers: '',
+        tankerTrailers: '',
+        otherTrailerTypes: '',
+        vanSizes: '',
+        reeferSizes: '',
+        flatbedSizes: '',
+        tankerSizes: '',
+      },
       operationInfo: {
         states: [],
+        canadaProvinces: '',
+        mexico: '',
+        minRatePerMile: '',
+        maxPicks: '',
+        maxDrops: '',
+        perPickDrop: '',
+        driverTouchComments: '',
       }
     },
     mode: 'onChange',
