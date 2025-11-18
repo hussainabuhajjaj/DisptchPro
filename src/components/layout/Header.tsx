@@ -11,6 +11,8 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -55,7 +57,9 @@ export default function Header() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut(auth);
+    if (auth) {
+      await signOut(auth);
+    }
     router.push("/");
   };
 
@@ -110,6 +114,8 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
+                <SheetTitle className="sr-only">Menu</SheetTitle>
+                <SheetDescription className="sr-only">Main navigation menu for Dispatch Pro</SheetDescription>
               <div className="flex flex-col gap-6 p-6">
                 <Link href="/" className="flex items-center gap-2">
                    <Truck className="h-6 w-6 text-primary" />
