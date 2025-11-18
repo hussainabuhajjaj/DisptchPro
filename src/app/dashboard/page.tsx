@@ -1,12 +1,11 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { LoaderCircle, Edit } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoaderCircle } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -36,7 +35,7 @@ export default function DashboardPage() {
             </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Your Information</CardTitle>
@@ -47,29 +46,15 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
 
-            <Card className="flex flex-col justify-center">
+            <Card>
                 <CardHeader>
-                    <CardTitle>Carrier Profile</CardTitle>
-                    <CardDescription>Complete your profile to help us find the best loads for you.</CardDescription>
+                    <CardTitle>Blog Section</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Button asChild>
-                        <Link href="/dashboard/profile">
-                            <Edit className="mr-2 h-4 w-4" /> Complete Your Profile
-                        </Link>
-                    </Button>
+                    <p>The blog will be implemented here. You'll be able to see the latest industry news and insights.</p>
                 </CardContent>
             </Card>
         </div>
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Blog Section</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>The blog will be implemented here. You'll be able to see the latest industry news and insights.</p>
-            </CardContent>
-        </Card>
       </div>
     </div>
   );
