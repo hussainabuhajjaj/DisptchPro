@@ -45,6 +45,7 @@ export default function Booking() {
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string | undefined>(timeSlots[0]);
+  const [dateTimeString, setDateTimeString] = useState('');
   
   useEffect(() => {
     if (state.message) {
@@ -55,6 +56,23 @@ export default function Booking() {
       });
     }
   }, [state, toast]);
+
+  useEffect(() => {
+    if (date && time) {
+      const [hour, minute, ampm] = time.match(/(\d+):(\d+) (AM|PM)/)!.slice(1);
+      let h = parseInt(hour, 10);
+      if (ampm === "PM" && h !== 12) {
+        h += 12;
+      }
+      if (ampm === "AM" && h === 12) {
+        h = 0;
+      }
+      const newDate = new Date(date);
+      newDate.setHours(h);
+      newDate.setMinutes(parseInt(minute, 10));
+      setDateTimeString(newDate.toISOString());
+    }
+  }, [date, time]);
 
   if (state.success) {
     return (
@@ -67,22 +85,6 @@ export default function Booking() {
             </div>
       </section>
     );
-  }
-
-  const getDateTimeString = () => {
-    if (!date || !time) return "";
-    const [hour, minute, ampm] = time.match(/(\d+):(\d+) (AM|PM)/)!.slice(1);
-    let h = parseInt(hour, 10);
-    if (ampm === "PM" && h !== 12) {
-      h += 12;
-    }
-    if (ampm === "AM" && h === 12) {
-      h = 0;
-    }
-    const newDate = new Date(date);
-    newDate.setHours(h);
-    newDate.setMinutes(parseInt(minute, 10));
-    return newDate.toISOString();
   }
 
   return (
@@ -128,7 +130,7 @@ export default function Booking() {
               </CardHeader>
               <CardContent className="p-0">
                 <form action={formAction} className="space-y-4">
-                  <input type="hidden" name="date" value={getDateTimeString()} />
+                  <input type="hidden" name="date" value={dateTimeString} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
