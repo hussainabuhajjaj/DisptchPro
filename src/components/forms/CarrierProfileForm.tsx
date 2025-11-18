@@ -8,12 +8,14 @@ import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { ArrowRight, ArrowLeft, LoaderCircle, Check } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
+import { Checkbox } from '../ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 const carrierInfoSchema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
@@ -58,11 +60,24 @@ const equipmentInfoSchema = z.object({
   tankerSizes: z.string().optional(),
 });
 
+const operationInfoSchema = z.object({
+    canadaProvinces: z.string().optional(),
+    mexico: z.string().optional(),
+    states: z.array(z.string()).optional(),
+    minRatePerMile: z.string().optional(),
+    maxPicks: z.string().optional(),
+    maxDrops: z.string().optional(),
+    perPickDrop: z.string().optional(),
+    driverTouch: z.enum(["Yes", "No"]).optional(),
+    driverTouchComments: z.string().optional(),
+});
+
 
 // We will add schemas for other parts later
 const fullFormSchema = z.object({
   carrierInfo: carrierInfoSchema,
   equipmentInfo: equipmentInfoSchema,
+  operationInfo: operationInfoSchema,
 });
 
 type FullFormValues = z.infer<typeof fullFormSchema>;
@@ -70,7 +85,7 @@ type FullFormValues = z.infer<typeof fullFormSchema>;
 const steps = [
   { id: 'carrier-info', title: 'Carrier Information', fields: Object.keys(carrierInfoSchema.shape).map(f => `carrierInfo.${f}`) },
   { id: 'equipment', title: 'Equipment', fields: Object.keys(equipmentInfoSchema.shape).map(f => `equipmentInfo.${f}`) },
-  { id: 'operation', title: 'Operation' },
+  { id: 'operation', title: 'Operation', fields: Object.keys(operationInfoSchema.shape).map(f => `operationInfo.${f}`) },
   { id: 'factoring', title: 'Factoring' },
   { id: 'insurance', title: 'Insurance' },
 ];
@@ -250,6 +265,123 @@ function EquipmentInfoForm() {
     );
 }
 
+const usStates = ["AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MO", "MN", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"];
+
+function OperationInfoForm() {
+    const { control } = useFormContext();
+
+    return (
+        <div className="space-y-6">
+            <h3 className="text-lg font-medium">International Operation</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField name="operationInfo.canadaProvinces" render={({ field }) => (
+                    <FormItem><FormLabel>Canada (list provinces)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="operationInfo.mexico" render={({ field }) => (
+                    <FormItem><FormLabel>Mexico</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+
+            <Separator />
+            <FormField
+                control={control}
+                name="operationInfo.states"
+                render={() => (
+                    <FormItem>
+                        <div className="mb-4">
+                            <FormLabel className="text-lg font-medium">US States of Operation</FormLabel>
+                            <FormDescription>Select all states that apply.</FormDescription>
+                        </div>
+                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
+                            {usStates.map((state) => (
+                                <FormField
+                                    key={state}
+                                    control={control}
+                                    name="operationInfo.states"
+                                    render={({ field }) => (
+                                        <FormItem key={state} className="flex flex-row items-center space-x-2 space-y-0">
+                                            <FormControl>
+                                                <Checkbox
+                                                    checked={field.value?.includes(state)}
+                                                    onCheckedChange={(checked) => {
+                                                        return checked
+                                                            ? field.onChange([...(field.value || []), state])
+                                                            : field.onChange(field.value?.filter((value: string) => value !== state));
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">{state}</FormLabel>
+                                        </FormItem>
+                                    )}
+                                />
+                            ))}
+                        </div>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+
+            <Separator />
+            <h3 className="text-lg font-medium">Rate of Haul</h3>
+            <p className="text-sm text-muted-foreground">Please give us your minimum rate information. We understand that many factors will change this, but this will give us a starting point.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <FormField name="operationInfo.minRatePerMile" render={({ field }) => (
+                    <FormItem><FormLabel>Min. Rate / Mile</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="operationInfo.maxPicks" render={({ field }) => (
+                    <FormItem><FormLabel>Max Picks</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="operationInfo.maxDrops" render={({ field }) => (
+                    <FormItem><FormLabel>Max Drops</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="operationInfo.perPickDrop" render={({ field }) => (
+                    <FormItem><FormLabel>$ Per Pick/Drop</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+
+            <Separator />
+             <div className="space-y-4">
+                <FormField
+                  control={control}
+                  name="operationInfo.driverTouch"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Driver Touch (Y/N)</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex items-center space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Yes" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Yes</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="No" />
+                            </FormControl>
+                            <FormLabel className="font-normal">No</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField name="operationInfo.driverTouchComments" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Comments</FormLabel>
+                        <FormControl><Textarea {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+             </div>
+        </div>
+    );
+}
 
 export default function CarrierProfileForm() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -261,11 +393,14 @@ export default function CarrierProfileForm() {
     defaultValues: {
       carrierInfo: {},
       equipmentInfo: {},
+      operationInfo: {
+        states: [],
+      }
     },
     mode: 'onChange',
   });
 
-  const { handleSubmit, trigger, formState } = methods;
+  const { handleSubmit, trigger } = methods;
 
   const processForm = async (data: FullFormValues) => {
     setIsSubmitting(true);
@@ -289,7 +424,7 @@ export default function CarrierProfileForm() {
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(step => step + 1);
+      setCurrentStep(step => step - 1);
     }
   };
 
@@ -348,7 +483,7 @@ export default function CarrierProfileForm() {
           <form onSubmit={handleSubmit(processForm)} className="space-y-8">
             {currentStep === 0 && <CarrierInfoForm />}
             {currentStep === 1 && <EquipmentInfoForm />}
-            {currentStep === 2 && <div className="text-center p-8">Area of Operation Form (To be built)</div>}
+            {currentStep === 2 && <OperationInfoForm />}
             {currentStep === 3 && <div className="text-center p-8">Factoring Form (To be built)</div>}
             {currentStep === 4 && <div className="text-center p-8">Insurance Form (To be built)</div>}
           </form>
@@ -371,3 +506,5 @@ export default function CarrierProfileForm() {
     </Card>
   );
 }
+
+    
