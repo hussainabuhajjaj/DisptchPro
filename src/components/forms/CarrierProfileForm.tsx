@@ -13,13 +13,14 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { ArrowRight, ArrowLeft, LoaderCircle, Check } from 'lucide-react';
+import { Textarea } from '../ui/textarea';
 
 const carrierInfoSchema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
   dba: z.string().optional(),
   physicalAddress: z.string().min(1, 'Physical address is required'),
   physicalCity: z.string().min(1, 'City is required'),
-  physicalState: z.string().min(1, 'State is required'),
+  physicalState: zstring().min(1, 'State is required'),
   physicalZip: z.string().min(1, 'ZIP code is required'),
   mailingAddress: z.string().optional(),
   mailingCity: z.string().optional(),
@@ -40,17 +41,36 @@ const carrierInfoSchema = z.object({
   hazmatCertified: z.string().optional(),
 });
 
+const equipmentInfoSchema = z.object({
+  numTrucks: z.string().optional(),
+  companyDrivers: z.string().optional(),
+  ownerOperators: z.string().optional(),
+  teamDrivers: z.string().optional(),
+  numTrailers: z.string().optional(),
+  vanTrailers: z.string().optional(),
+  reeferTrailers: z.string().optional(),
+  flatbedTrailers: z.string().optional(),
+  tankerTrailers: z.string().optional(),
+  otherTrailerTypes: z.string().optional(),
+  vanSizes: z.string().optional(),
+  reeferSizes: z.string().optional(),
+  flatbedSizes: z.string().optional(),
+  tankerSizes: z.string().optional(),
+});
+
+
 // We will add schemas for other parts later
 const fullFormSchema = z.object({
   carrierInfo: carrierInfoSchema,
+  equipmentInfo: equipmentInfoSchema,
 });
 
 type FullFormValues = z.infer<typeof fullFormSchema>;
 
 const steps = [
-  { id: 'carrier-info', title: 'Carrier Information', fields: Object.keys(carrierInfoSchema.shape) },
-  { id: 'equipment', title: 'Equipment' },
-  { id: 'operation', title: 'Area of Operation' },
+  { id: 'carrier-info', title: 'Carrier Information', fields: Object.keys(carrierInfoSchema.shape).map(f => `carrierInfo.${f}`) },
+  { id: 'equipment', title: 'Equipment', fields: Object.keys(equipmentInfoSchema.shape).map(f => `equipmentInfo.${f}`) },
+  { id: 'operation', title: 'Operation' },
   { id: 'factoring', title: 'Factoring' },
   { id: 'insurance', title: 'Insurance' },
 ];
@@ -168,6 +188,68 @@ function CarrierInfoForm() {
     );
 }
 
+function EquipmentInfoForm() {
+    return (
+        <div className="space-y-6">
+            <h3 className="text-lg font-medium">Fleet Composition</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <FormField name="equipmentInfo.numTrucks" render={({ field }) => (
+                    <FormItem><FormLabel># of Trucks</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.companyDrivers" render={({ field }) => (
+                    <FormItem><FormLabel>Company Drivers</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.ownerOperators" render={({ field }) => (
+                    <FormItem><FormLabel>Owner Operators</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.teamDrivers" render={({ field }) => (
+                    <FormItem><FormLabel>Team Drivers</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+
+            <Separator />
+            <h3 className="text-lg font-medium">Trailer Types</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                 <FormField name="equipmentInfo.numTrailers" render={({ field }) => (
+                    <FormItem><FormLabel># of Trailers</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.vanTrailers" render={({ field }) => (
+                    <FormItem><FormLabel>Van</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.reeferTrailers" render={({ field }) => (
+                    <FormItem><FormLabel>Reefers</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.flatbedTrailers" render={({ field }) => (
+                    <FormItem><FormLabel>Flatbed</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                 <FormField name="equipmentInfo.tankerTrailers" render={({ field }) => (
+                    <FormItem><FormLabel>Tanker</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+            <FormField name="equipmentInfo.otherTrailerTypes" render={({ field }) => (
+                <FormItem><FormLabel>Other Trailer Types</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+
+             <Separator />
+            <h3 className="text-lg font-medium">Trailer Sizes</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <FormField name="equipmentInfo.vanSizes" render={({ field }) => (
+                    <FormItem><FormLabel>Van</FormLabel><FormControl><Input {...field} placeholder="e.g., 53', 48'" /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.reeferSizes" render={({ field }) => (
+                    <FormItem><FormLabel>Reefers</FormLabel><FormControl><Input {...field} placeholder="e.g., 53', 48'" /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.flatbedSizes" render={({ field }) => (
+                    <FormItem><FormLabel>Flatbed</FormLabel><FormControl><Input {...field} placeholder="e.g., 48', Step-deck" /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="equipmentInfo.tankerSizes" render={({ field }) => (
+                    <FormItem><FormLabel>Tanker</FormLabel><FormControl><Input {...field} placeholder="e.g., Food grade, Hazmat" /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+        </div>
+    );
+}
+
 
 export default function CarrierProfileForm() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -178,6 +260,7 @@ export default function CarrierProfileForm() {
     resolver: zodResolver(fullFormSchema),
     defaultValues: {
       carrierInfo: {},
+      equipmentInfo: {},
     },
     mode: 'onChange',
   });
@@ -206,7 +289,7 @@ export default function CarrierProfileForm() {
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(step => step + 1);
+      setCurrentStep(step => step - 1);
     }
   };
 
@@ -264,8 +347,7 @@ export default function CarrierProfileForm() {
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(processForm)} className="space-y-8">
             {currentStep === 0 && <CarrierInfoForm />}
-            {/* Other steps will be rendered here */}
-            {currentStep === 1 && <div className="text-center p-8">Equipment Information Form (To be built)</div>}
+            {currentStep === 1 && <EquipmentInfoForm />}
             {currentStep === 2 && <div className="text-center p-8">Area of Operation Form (To be built)</div>}
             {currentStep === 3 && <div className="text-center p-8">Factoring Form (To be built)</div>}
             {currentStep === 4 && <div className="text-center p-8">Insurance Form (To be built)</div>}
@@ -289,3 +371,5 @@ export default function CarrierProfileForm() {
     </Card>
   );
 }
+
+    
