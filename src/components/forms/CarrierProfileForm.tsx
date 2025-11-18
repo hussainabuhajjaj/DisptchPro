@@ -20,7 +20,7 @@ const carrierInfoSchema = z.object({
   dba: z.string().optional(),
   physicalAddress: z.string().min(1, 'Physical address is required'),
   physicalCity: z.string().min(1, 'City is required'),
-  physicalState: zstring().min(1, 'State is required'),
+  physicalState: z.string().min(1, 'State is required'),
   physicalZip: z.string().min(1, 'ZIP code is required'),
   mailingAddress: z.string().optional(),
   mailingCity: z.string().optional(),
@@ -289,7 +289,7 @@ export default function CarrierProfileForm() {
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(step => step - 1);
+      setCurrentStep(step => step + 1);
     }
   };
 
@@ -371,5 +371,3 @@ export default function CarrierProfileForm() {
     </Card>
   );
 }
-
-    
