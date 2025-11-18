@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, FormProvider, useFormContext, useFieldArray, Control } from 'react-hook-form';
+import { useForm, FormProvider, useFormContext, useFieldArray, Control, FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -132,11 +132,11 @@ const fullFormSchema = z.object({
 type FullFormValues = z.infer<typeof fullFormSchema>;
 
 const steps = [
-  { id: 'carrier-info', title: 'Carrier Information', schema: carrierInfoSchema },
-  { id: 'equipment', title: 'Equipment', schema: equipmentInfoSchema },
-  { id: 'operation', title: 'Operation', schema: operationInfoSchema },
-  { id: 'factoring', title: 'Factoring', schema: factoringInfoSchema },
-  { id: 'insurance', title: 'Insurance & Details', schema: insuranceInfoSchema },
+  { id: 'carrierInfo', title: 'Carrier Information', schema: carrierInfoSchema },
+  { id: 'equipmentInfo', title: 'Equipment', schema: equipmentInfoSchema },
+  { id: 'operationInfo', title: 'Operation', schema: operationInfoSchema },
+  { id: 'factoringInfo', title: 'Factoring', schema: factoringInfoSchema },
+  { id: 'insuranceInfo', title: 'Insurance & Details', schema: insuranceInfoSchema },
 ];
 
 function CarrierInfoForm() {
@@ -676,11 +676,13 @@ export default function CarrierProfileForm() {
         numTrailers: '', vanTrailers: '', reeferTrailers: '', flatbedTrailers: '',
         tankerTrailers: '', otherTrailerTypes: '', vanSizes: '', reeferSizes: '',
         flatbedSizes: '', tankerSizes: '', tractors: [], trailers: [], drivers: [],
+        driversCanMakeDecisions: undefined, driversNeedCopy: undefined,
         equipmentDescription: '',
       },
       operationInfo: {
         states: [], canadaProvinces: '', mexico: '', minRatePerMile: '',
-        maxPicks: '', maxDrops: '', perPickDrop: '', driverTouchComments: '',
+        maxPicks: '', maxDrops: '', perPickDrop: '', driverTouch: undefined, 
+        driverTouchComments: '',
       },
       factoringInfo: {
         factoringCompany: '', mainContact: '', phone: '', fax: '',
@@ -694,7 +696,7 @@ export default function CarrierProfileForm() {
     mode: 'onChange',
   });
 
-  const { handleSubmit, trigger, getValues } = methods;
+  const { handleSubmit, trigger } = methods;
 
   const processForm = async (data: FullFormValues) => {
     setIsSubmitting(true);
@@ -706,21 +708,10 @@ export default function CarrierProfileForm() {
   };
   
   const nextStep = async () => {
-    const stepSchema = steps[currentStep].schema;
-    const stepId = steps[currentStep].id as keyof FullFormValues;
-    const stepValues = getValues(stepId);
+    const stepId = steps[currentStep].id as FieldPath<FullFormValues>;
+    const isValid = await trigger(stepId, { shouldFocus: true });
     
-    // We use safeParse to avoid throwing an error and stopping the form.
-    // The errors will be displayed on the fields instead.
-    const result = await stepSchema.safeParseAsync(stepValues);
-    if (!result.success) {
-        // Manually trigger validation for all fields in the current step to show errors
-        const fields = Object.keys(stepSchema.shape).map(key => `${stepId}.${key}`);
-        await trigger(fields as any, { shouldFocus: true });
-        return;
-    }
-    
-    if (currentStep < steps.length - 1) {
+    if (isValid && currentStep < steps.length - 1) {
       setCurrentStep(step => step + 1);
     }
   };
@@ -813,5 +804,3 @@ export default function CarrierProfileForm() {
     </Card>
   );
 }
-
-    
