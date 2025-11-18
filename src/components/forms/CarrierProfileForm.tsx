@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, FormProvider, useFormContext } from 'react-hook-form';
+import { useForm, FormProvider, useFormContext, useFieldArray, Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { ArrowRight, ArrowLeft, LoaderCircle, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, LoaderCircle, Check, PlusCircle, Trash2 } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -58,6 +58,29 @@ const equipmentInfoSchema = z.object({
   reeferSizes: z.string().optional(),
   flatbedSizes: z.string().optional(),
   tankerSizes: z.string().optional(),
+  tractors: z.array(z.object({
+    year: z.string(),
+    makeModel: z.string(),
+    truckNum: z.string(),
+    vin: z.string(),
+  })).optional(),
+  trailers: z.array(z.object({
+    year: z.string(),
+    makeModel: z.string(),
+    trailerNum: z.string(),
+    vin: z.string(),
+  })).optional(),
+  drivers: z.array(z.object({
+    truckNum: z.string(),
+    trailerNum: z.string(),
+    trailerType: z.string(),
+    maxWeight: z.string(),
+    driverName: z.string(),
+    driverCell: z.string(),
+  })).optional(),
+  driversCanMakeDecisions: z.enum(["Yes", "No"]).optional(),
+  driversNeedCopy: z.enum(["Yes", "No"]).optional(),
+  equipmentDescription: z.string().optional(),
 });
 
 const operationInfoSchema = z.object({
@@ -72,22 +95,48 @@ const operationInfoSchema = z.object({
     driverTouchComments: z.string().optional(),
 });
 
+const factoringInfoSchema = z.object({
+    factoringCompany: z.string().optional(),
+    mainContact: z.string().optional(),
+    phone: z.string().optional(),
+    fax: z.string().optional(),
+    websiteUrl: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zip: z.string().optional(),
+});
 
-// We will add schemas for other parts later
+const insuranceInfoSchema = z.object({
+    insuranceAgency: z.string().optional(),
+    mainContact: z.string().optional(),
+    phone: z.string().optional(),
+    fax: z.string().optional(),
+    email: z.string().email().optional().or(z.literal('')),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zip: z.string().optional(),
+    companyDescription: z.string().optional(),
+});
+
+
 const fullFormSchema = z.object({
   carrierInfo: carrierInfoSchema,
   equipmentInfo: equipmentInfoSchema,
   operationInfo: operationInfoSchema,
+  factoringInfo: factoringInfoSchema,
+  insuranceInfo: insuranceInfoSchema,
 });
 
 type FullFormValues = z.infer<typeof fullFormSchema>;
 
 const steps = [
-  { id: 'carrier-info', title: 'Carrier Information', fields: Object.keys(carrierInfoSchema.shape).map(f => `carrierInfo.${f}`) },
-  { id: 'equipment', title: 'Equipment', fields: Object.keys(equipmentInfoSchema.shape).map(f => `equipmentInfo.${f}`) },
-  { id: 'operation', title: 'Operation', fields: Object.keys(operationInfoSchema.shape).map(f => `operationInfo.${f}`) },
-  { id: 'factoring', title: 'Factoring' },
-  { id: 'insurance', title: 'Insurance' },
+  { id: 'carrier-info', title: 'Carrier Information', schema: carrierInfoSchema },
+  { id: 'equipment', title: 'Equipment', schema: equipmentInfoSchema },
+  { id: 'operation', title: 'Operation', schema: operationInfoSchema },
+  { id: 'factoring', title: 'Factoring', schema: factoringInfoSchema },
+  { id: 'insurance', title: 'Insurance & Details', schema: insuranceInfoSchema },
 ];
 
 function CarrierInfoForm() {
@@ -203,7 +252,57 @@ function CarrierInfoForm() {
     );
 }
 
+function DynamicTable<T extends string>({ name, columns, control }: { name: T, columns: { key: string, label: string }[], control: Control<any> }) {
+    const { fields, append, remove } = useFieldArray({ control, name });
+
+    return (
+        <div className="space-y-4">
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-b">
+                            {columns.map(col => <th key={col.key} className="p-2 text-left font-medium">{col.label}</th>)}
+                            <th className="w-12 p-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {fields.map((field, index) => (
+                            <tr key={field.id} className="border-b">
+                                {columns.map(col => (
+                                    <td key={col.key} className="p-1">
+                                        <FormField
+                                            control={control}
+                                            name={`${name}.${index}.${col.key}`}
+                                            render={({ field }) => <Input {...field} className="h-8" />}
+                                        />
+                                    </td>
+                                ))}
+                                <td className="p-1">
+                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(index)}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => append(columns.reduce((acc, col) => ({ ...acc, [col.key]: '' }), {}))}
+            >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Row
+            </Button>
+        </div>
+    );
+}
+
 function EquipmentInfoForm() {
+    const { control } = useFormContext();
+
     return (
         <div className="space-y-6">
             <h3 className="text-lg font-medium">Fleet Composition</h3>
@@ -259,6 +358,78 @@ function EquipmentInfoForm() {
                 )} />
                 <FormField name="equipmentInfo.tankerSizes" render={({ field }) => (
                     <FormItem><FormLabel>Tanker</FormLabel><FormControl><Input {...field} placeholder="e.g., Food grade, Hazmat" /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+            
+            <Separator />
+            <h3 className="text-lg font-medium">Tractor Information</h3>
+            <DynamicTable name="equipmentInfo.tractors" control={control} columns={[
+                { key: 'year', label: 'Year' },
+                { key: 'makeModel', label: 'Make/Model' },
+                { key: 'truckNum', label: 'Truck #' },
+                { key: 'vin', label: 'VIN #' },
+            ]} />
+
+            <Separator />
+            <h3 className="text-lg font-medium">Trailer Information</h3>
+            <DynamicTable name="equipmentInfo.trailers" control={control} columns={[
+                { key: 'year', label: 'Year' },
+                { key: 'makeModel', label: 'Make/Model' },
+                { key: 'trailerNum', label: 'Trailer #' },
+                { key: 'vin', label: 'VIN #' },
+            ]} />
+
+            <Separator />
+            <h3 className="text-lg font-medium">Driver Information</h3>
+            <DynamicTable name="equipmentInfo.drivers" control={control} columns={[
+                { key: 'truckNum', label: 'Truck #' },
+                { key: 'trailerNum', label: 'Trailer #' },
+                { key: 'trailerType', label: 'Trailer Type' },
+                { key: 'maxWeight', label: 'Max Weight' },
+                { key: 'driverName', label: 'Driver Name' },
+                { key: 'driverCell', label: 'Driver Cell' },
+            ]} />
+
+            <Separator />
+            <div className="space-y-4">
+                 <FormField
+                  control={control}
+                  name="equipmentInfo.driversCanMakeDecisions"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>Do the assigned drivers have the right to make load decisions for you?</FormLabel>
+                      <FormControl>
+                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4">
+                          <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="Yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="No" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={control}
+                  name="equipmentInfo.driversNeedCopy"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>Do the assigned drivers need to have a copy of the load confirmation?</FormLabel>
+                       <FormControl>
+                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex items-center space-x-4">
+                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="Yes" /></FormControl><FormLabel className="font-normal">Yes</FormLabel></FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="No" /></FormControl><FormLabel className="font-normal">No</FormLabel></FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="equipmentInfo.equipmentDescription" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Provide a detailed description of the equipment (i.e. pallets, tarps, oversize, and weight limits):</FormLabel>
+                        <FormControl><Textarea {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
                 )} />
             </div>
         </div>
@@ -383,6 +554,107 @@ function OperationInfoForm() {
     );
 }
 
+function FactoringInfoForm() {
+    return (
+        <div className="space-y-6">
+            <h3 className="text-lg font-medium">Factoring Information</h3>
+            <p className="text-sm text-muted-foreground">If you use a factoring service, please provide us with the following information. This will ensure that we only use brokers that are approved by your factoring company. If you don’t use a factoring service but would like to, please let us know so we can source one for you.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField name="factoringInfo.factoringCompany" render={({ field }) => (
+                    <FormItem><FormLabel>Factoring Company</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="factoringInfo.mainContact" render={({ field }) => (
+                    <FormItem><FormLabel>Main Contact</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="factoringInfo.phone" render={({ field }) => (
+                    <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="factoringInfo.fax" render={({ field }) => (
+                    <FormItem><FormLabel>Fax</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                 <FormField name="factoringInfo.websiteUrl" render={({ field }) => (
+                    <FormItem className="md:col-span-2"><FormLabel>Website URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+            
+            <Separator />
+            <h3 className="text-lg font-medium">Factoring Company Address</h3>
+            <div className="space-y-4">
+                 <FormField name="factoringInfo.address" render={({ field }) => (
+                    <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField name="factoringInfo.city" render={({ field }) => (
+                        <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="factoringInfo.state" render={({ field }) => (
+                        <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="factoringInfo.zip" render={({ field }) => (
+                        <FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function InsuranceInfoForm() {
+    return (
+        <div className="space-y-6">
+            <h3 className="text-lg font-medium">Insurance Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField name="insuranceInfo.insuranceAgency" render={({ field }) => (
+                    <FormItem><FormLabel>Insurance Agency</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="insuranceInfo.mainContact" render={({ field }) => (
+                    <FormItem><FormLabel>Main Contact</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="insuranceInfo.phone" render={({ field }) => (
+                    <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="insuranceInfo.fax" render={({ field }) => (
+                    <FormItem><FormLabel>Fax</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="insuranceInfo.email" render={({ field }) => (
+                    <FormItem className="md:col-span-2"><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+
+            <Separator />
+            <h3 className="text-lg font-medium">Insurance Agency Address</h3>
+            <div className="space-y-4">
+                <FormField name="insuranceInfo.address" render={({ field }) => (
+                    <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField name="insuranceInfo.city" render={({ field }) => (
+                        <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="insuranceInfo.state" render={({ field }) => (
+                        <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="insuranceInfo.zip" render={({ field }) => (
+                        <FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                </div>
+            </div>
+
+            <Separator />
+             <FormField name="insuranceInfo.companyDescription" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Provide any additional details to better describe your company:</FormLabel>
+                    <FormControl><Textarea {...field} rows={5} /></FormControl>
+                    <FormMessage />
+                </FormItem>
+            )} />
+
+        </div>
+    );
+}
+
+
 export default function CarrierProfileForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -392,61 +664,37 @@ export default function CarrierProfileForm() {
     resolver: zodResolver(fullFormSchema),
     defaultValues: {
       carrierInfo: {
-        companyName: '',
-        dba: '',
-        physicalAddress: '',
-        physicalCity: '',
-        physicalState: '',
-        physicalZip: '',
-        mailingAddress: '',
-        mailingCity: '',
-        mailingState: '',
-        mailingZip: '',
-        mainContact: '',
-        email: '',
-        officePhone: '',
-        fax: '',
-        cellPhone: '',
-        emergencyContact: '',
-        emergencyPhone: '',
-        mcNumber: '',
-        dotNumber: '',
-        einNumber: '',
-        scacCode: '',
-        twicCertified: '',
-        hazmatCertified: '',
+        companyName: '', dba: '', physicalAddress: '', physicalCity: '',
+        physicalState: '', physicalZip: '', mailingAddress: '', mailingCity: '',
+        mailingState: '', mailingZip: '', mainContact: '', email: '',
+        officePhone: '', fax: '', cellPhone: '', emergencyContact: '',
+        emergencyPhone: '', mcNumber: '', dotNumber: '', einNumber: '',
+        scacCode: '', twicCertified: '', hazmatCertified: '',
       },
       equipmentInfo: {
-        numTrucks: '',
-        companyDrivers: '',
-        ownerOperators: '',
-        teamDrivers: '',
-        numTrailers: '',
-        vanTrailers: '',
-        reeferTrailers: '',
-        flatbedTrailers: '',
-        tankerTrailers: '',
-        otherTrailerTypes: '',
-        vanSizes: '',
-        reeferSizes: '',
-        flatbedSizes: '',
-        tankerSizes: '',
+        numTrucks: '', companyDrivers: '', ownerOperators: '', teamDrivers: '',
+        numTrailers: '', vanTrailers: '', reeferTrailers: '', flatbedTrailers: '',
+        tankerTrailers: '', otherTrailerTypes: '', vanSizes: '', reeferSizes: '',
+        flatbedSizes: '', tankerSizes: '', tractors: [], trailers: [], drivers: [],
+        equipmentDescription: '',
       },
       operationInfo: {
-        states: [],
-        canadaProvinces: '',
-        mexico: '',
-        minRatePerMile: '',
-        maxPicks: '',
-        maxDrops: '',
-        perPickDrop: '',
-        driverTouchComments: '',
+        states: [], canadaProvinces: '', mexico: '', minRatePerMile: '',
+        maxPicks: '', maxDrops: '', perPickDrop: '', driverTouchComments: '',
+      },
+      factoringInfo: {
+        factoringCompany: '', mainContact: '', phone: '', fax: '',
+        websiteUrl: '', address: '', city: '', state: '', zip: '',
+      },
+      insuranceInfo: {
+        insuranceAgency: '', mainContact: '', phone: '', fax: '', email: '',
+        address: '', city: '', state: '', zip: '', companyDescription: '',
       }
     },
     mode: 'onChange',
   });
 
-  const { handleSubmit, trigger } = methods;
+  const { handleSubmit, trigger, getValues } = methods;
 
   const processForm = async (data: FullFormValues) => {
     setIsSubmitting(true);
@@ -458,10 +706,19 @@ export default function CarrierProfileForm() {
   };
   
   const nextStep = async () => {
-    const fields = steps[currentStep].fields;
-    const output = await trigger(fields as any, { shouldFocus: true });
+    const stepSchema = steps[currentStep].schema;
+    const stepId = steps[currentStep].id as keyof FullFormValues;
+    const stepValues = getValues(stepId);
     
-    if (!output) return;
+    // We use safeParse to avoid throwing an error and stopping the form.
+    // The errors will be displayed on the fields instead.
+    const result = await stepSchema.safeParseAsync(stepValues);
+    if (!result.success) {
+        // Manually trigger validation for all fields in the current step to show errors
+        const fields = Object.keys(stepSchema.shape).map(key => `${stepId}.${key}`);
+        await trigger(fields as any, { shouldFocus: true });
+        return;
+    }
     
     if (currentStep < steps.length - 1) {
       setCurrentStep(step => step + 1);
@@ -486,10 +743,14 @@ export default function CarrierProfileForm() {
 
   if (formCompleted) {
     return (
-        <div className="flex flex-col items-center justify-center text-center gap-4 py-24">
+        <div className="flex flex-col items-center justify-center text-center gap-4 py-24 px-4">
             <Check className="h-16 w-16 text-green-500" />
             <h2 className="text-2xl font-bold tracking-tighter">Profile Submitted!</h2>
-            <p className="text-lg text-muted-foreground">Thank you for completing your profile. We will review it shortly.</p>
+            <p className="text-lg text-muted-foreground max-w-2xl">
+              Thank you for completing your profile. We will review it and get in touch shortly.
+              <br/>
+              <span className="font-semibold mt-2 block">Please keep a blank copy of this form, and email updates to us when they occur, this way we have the most current information on hand.</span>
+            </p>
         </div>
     );
   }
@@ -530,8 +791,8 @@ export default function CarrierProfileForm() {
             {currentStep === 0 && <CarrierInfoForm />}
             {currentStep === 1 && <EquipmentInfoForm />}
             {currentStep === 2 && <OperationInfoForm />}
-            {currentStep === 3 && <div className="text-center p-8">Factoring Form (To be built)</div>}
-            {currentStep === 4 && <div className="text-center p-8">Insurance Form (To be built)</div>}
+            {currentStep === 3 && <FactoringInfoForm />}
+            {currentStep === 4 && <InsuranceInfoForm />}
           </form>
         </FormProvider>
       </CardContent>
