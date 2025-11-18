@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -205,7 +206,7 @@ export default function CarrierProfileForm() {
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(step => step - 1);
+      setCurrentStep(step => step + 1);
     }
   };
 
@@ -232,38 +233,42 @@ export default function CarrierProfileForm() {
   return (
     <Card className="w-full">
         <CardHeader>
-            <div className="flex justify-center mb-6">
+            <div className="flex items-start justify-center p-4">
+              <ol className="flex items-center w-full max-w-2xl">
                 {steps.map((step, index) => (
-                    <div key={step.id} className="flex items-center">
-                        <div className="flex flex-col items-center">
-                            <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center font-bold",
-                                index === currentStep ? "bg-primary text-primary-foreground" :
-                                index < currentStep ? "bg-green-500 text-white" :
-                                "bg-muted text-muted-foreground"
-                            )}>
-                                {index < currentStep ? <Check className="w-5 h-5"/> : index + 1}
-                            </div>
-                            <p className={cn(
-                                "text-xs mt-2 text-center",
-                                index === currentStep ? "font-bold text-primary" : "text-muted-foreground"
-                            )}>{step.title}</p>
+                  <li key={step.id} className={cn(
+                      "relative flex w-full items-center",
+                      index < steps.length - 1 ? "after:content-[''] after:w-full after:h-1 after:border-b after:border-4 after:inline-block" : "",
+                      index <= currentStep ? "after:border-primary" : "after:border-muted",
+                  )}>
+                    <div className="flex flex-col items-center">
+                        <div className={cn(
+                            "flex items-center justify-center w-10 h-10 rounded-full shrink-0",
+                            index <= currentStep ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        )}>
+                            {index < currentStep ? <Check className="w-6 h-6"/> : <span className="font-bold text-lg">{index + 1}</span>}
                         </div>
-                         {index < steps.length - 1 && <div className="flex-auto border-t-2 mx-4 w-16 transition-colors" />}
+                        <p className={cn(
+                            "text-xs text-center mt-2 w-20 md:w-auto",
+                             index <= currentStep ? "font-bold text-primary" : "text-muted-foreground",
+                             "hidden md:block"
+                        )}>{step.title}</p>
                     </div>
+                  </li>
                 ))}
+              </ol>
             </div>
             <Separator />
         </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 md:p-6">
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(processForm)} className="space-y-8">
             {currentStep === 0 && <CarrierInfoForm />}
             {/* Other steps will be rendered here */}
-            {currentStep === 1 && <div>Equipment Information Form (To be built)</div>}
-            {currentStep === 2 && <div>Area of Operation Form (To be built)</div>}
-            {currentStep === 3 && <div>Factoring Form (To be built)</div>}
-            {currentStep === 4 && <div>Insurance Form (To be built)</div>}
+            {currentStep === 1 && <div className="text-center p-8">Equipment Information Form (To be built)</div>}
+            {currentStep === 2 && <div className="text-center p-8">Area of Operation Form (To be built)</div>}
+            {currentStep === 3 && <div className="text-center p-8">Factoring Form (To be built)</div>}
+            {currentStep === 4 && <div className="text-center p-8">Insurance Form (To be built)</div>}
           </form>
         </FormProvider>
       </CardContent>
