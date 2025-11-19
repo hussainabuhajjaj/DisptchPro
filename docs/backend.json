@@ -6,50 +6,16 @@
       "type": "object",
       "description": "Represents a potential client lead captured through the web form.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Lead entity."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "First name of the lead."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "Last name of the lead."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the lead.",
-          "format": "email"
-        },
-        "phone": {
-          "type": "string",
-          "description": "Phone number of the lead."
-        },
-        "serviceOfInterest": {
-          "type": "string",
-          "description": "The specific dispatching service the lead is interested in."
-        },
-        "message": {
-          "type": "string",
-          "description": "Additional message or notes from the lead."
-        },
-        "dateCreated": {
-          "type": "string",
-          "description": "Date and time when the lead was captured.",
-          "format": "date-time"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the Lead entity." },
+        "firstName": { "type": "string", "description": "First name of the lead." },
+        "lastName": { "type": "string", "description": "Last name of the lead." },
+        "email": { "type": "string", "description": "Email address of the lead.", "format": "email" },
+        "phone": { "type": "string", "description": "Phone number of the lead." },
+        "serviceOfInterest": { "type": "string", "description": "The specific dispatching service the lead is interested in." },
+        "message": { "type": "string", "description": "Additional message or notes from the lead." },
+        "dateCreated": { "type": "string", "description": "Date and time when the lead was captured.", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "firstName",
-        "lastName",
-        "email",
-        "phone",
-        "serviceOfInterest",
-        "dateCreated"
-      ]
+      "required": ["id", "firstName", "lastName", "email", "phone", "serviceOfInterest", "dateCreated"]
     },
     "Appointment": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -57,40 +23,14 @@
       "type": "object",
       "description": "Represents a consultation call appointment booked through the calendar system.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Appointment entity."
-        },
-        "leadId": {
-          "type": "string",
-          "description": "Reference to the Lead who booked the appointment. (Relationship: Lead 1:N Appointment)"
-        },
-        "startTime": {
-          "type": "string",
-          "description": "Start time of the appointment.",
-          "format": "date-time"
-        },
-        "endTime": {
-          "type": "string",
-          "description": "End time of the appointment.",
-          "format": "date-time"
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the appointment (e.g., 'Booked', 'Confirmed', 'Cancelled')."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Any additional notes related to the appointment."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the Appointment entity." },
+        "leadId": { "type": "string", "description": "Reference to the Lead who booked the appointment." },
+        "startTime": { "type": "string", "description": "Start time of the appointment.", "format": "date-time" },
+        "endTime": { "type": "string", "description": "End time of the appointment.", "format": "date-time" },
+        "status": { "type": "string", "description": "Status of the appointment (e.g., 'Booked', 'Confirmed', 'Cancelled')." },
+        "notes": { "type": "string", "description": "Any additional notes related to the appointment." }
       },
-      "required": [
-        "id",
-        "leadId",
-        "startTime",
-        "endTime",
-        "status"
-      ]
+      "required": ["id", "leadId", "startTime", "endTime", "status"]
     },
     "Testimonial": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -98,38 +38,14 @@
       "type": "object",
       "description": "Represents a testimonial or success story from a client.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Testimonial entity."
-        },
-        "clientName": {
-          "type": "string",
-          "description": "Name of the client providing the testimonial."
-        },
-        "clientTitle": {
-          "type": "string",
-          "description": "Title or position of the client."
-        },
-        "testimonialText": {
-          "type": "string",
-          "description": "The actual text of the testimonial."
-        },
-        "dateCreated": {
-          "type": "string",
-          "description": "Date and time when the testimonial was created.",
-          "format": "date-time"
-        },
-        "imageURL": {
-          "type": "string",
-          "description": "URL of the image to go with the testimonial"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the Testimonial entity." },
+        "clientName": { "type": "string", "description": "Name of the client providing the testimonial." },
+        "clientTitle": { "type": "string", "description": "Title or position of the client." },
+        "testimonialText": { "type": "string", "description": "The actual text of the testimonial." },
+        "dateCreated": { "type": "string", "description": "Date and time when the testimonial was created.", "format": "date-time" },
+        "imageURL": { "type": "string", "description": "URL of the image to go with the testimonial" }
       },
-      "required": [
-        "id",
-        "clientName",
-        "testimonialText",
-        "dateCreated"
-      ]
+      "required": ["id", "clientName", "testimonialText", "dateCreated"]
     },
     "FAQ": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -137,30 +53,181 @@
       "type": "object",
       "description": "Represents a frequently asked question and its answer.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the FAQ entity."
-        },
-        "question": {
-          "type": "string",
-          "description": "The question being asked."
-        },
-        "answer": {
-          "type": "string",
-          "description": "The answer to the question."
-        },
-        "dateCreated": {
-          "type": "string",
-          "description": "Date and time when the FAQ was created.",
-          "format": "date-time"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the FAQ entity." },
+        "question": { "type": "string", "description": "The question being asked." },
+        "answer": { "type": "string", "description": "The answer to the question." },
+        "dateCreated": { "type": "string", "description": "Date and time when the FAQ was created.", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "question",
-        "answer",
-        "dateCreated"
-      ]
+      "required": ["id", "question", "answer", "dateCreated"]
+    },
+    "Carrier": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Carrier",
+        "type": "object",
+        "description": "Central entity for a carrier, containing core company, contact, and authority information.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the Carrier." },
+            "companyName": { "type": "string" },
+            "dba": { "type": "string" },
+            "physicalAddress": { "type": "string" },
+            "physicalCity": { "type": "string" },
+            "physicalState": { "type": "string" },
+            "physicalZip": { "type": "string" },
+            "mailingAddress": { "type": "string" },
+            "mailingCity": { "type": "string" },
+            "mailingState": { "type": "string" },
+            "mailingZip": { "type": "string" },
+            "mainContact": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "officePhone": { "type": "string" },
+            "fax": { "type": "string" },
+            "cellPhone": { "type": "string" },
+            "emergencyContact": { "type": "string" },
+            "emergencyPhone": { "type": "string" },
+            "mcNumber": { "type": "string" },
+            "dotNumber": { "type": "string" },
+            "einNumber": { "type": "string" },
+            "scacCode": { "type": "string" },
+            "twicCertified": { "type": "string" },
+            "hazmatCertified": { "type": "string" }
+        },
+        "required": ["id", "companyName", "physicalAddress", "physicalCity", "physicalState", "physicalZip", "mainContact", "email", "officePhone", "cellPhone", "emergencyContact", "emergencyPhone", "mcNumber", "dotNumber", "einNumber"]
+    },
+    "CarrierEquipment": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CarrierEquipment",
+        "type": "object",
+        "description": "Equipment counts and general details for a carrier.",
+        "properties": {
+            "id": { "type": "string" },
+            "carrierId": { "type": "string", "$ref": "#/entities/Carrier/properties/id" },
+            "numTrucks": { "type": "integer" },
+            "companyDrivers": { "type": "integer" },
+            "ownerOperators": { "type": "integer" },
+            "teamDrivers": { "type": "integer" },
+            "numTrailers": { "type": "integer" },
+            "vanTrailers": { "type": "integer" },
+            "reeferTrailers": { "type": "integer" },
+            "flatbedTrailers": { "type": "integer" },
+            "tankerTrailers": { "type": "integer" },
+            "otherTrailerTypes": { "type": "string" },
+            "vanSizes": { "type": "string" },
+            "reeferSizes": { "type": "string" },
+            "flatbedSizes": { "type": "string" },
+            "tankerSizes": { "type": "string" },
+            "driversCanMakeDecisions": { "type": "boolean" },
+            "driversNeedCopy": { "type": "boolean" },
+            "equipmentDescription": { "type": "string" }
+        },
+        "required": ["id", "carrierId"]
+    },
+    "CarrierTractor": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CarrierTractor",
+        "type": "object",
+        "description": "Represents a single tractor belonging to a carrier.",
+        "properties": {
+            "id": { "type": "string" },
+            "carrierId": { "type": "string", "$ref": "#/entities/Carrier/properties/id" },
+            "year": { "type": "string" },
+            "makeModel": { "type": "string" },
+            "truckNum": { "type": "string" },
+            "vin": { "type": "string" }
+        },
+        "required": ["id", "carrierId"]
+    },
+    "CarrierTrailer": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CarrierTrailer",
+        "type": "object",
+        "description": "Represents a single trailer belonging to a carrier.",
+        "properties": {
+            "id": { "type": "string" },
+            "carrierId": { "type": "string", "$ref": "#/entities/Carrier/properties/id" },
+            "year": { "type": "string" },
+            "makeModel": { "type": "string" },
+            "trailerNum": { "type": "string" },
+            "vin": { "type": "string" }
+        },
+        "required": ["id", "carrierId"]
+    },
+    "CarrierDriver": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CarrierDriver",
+        "type": "object",
+        "description": "Represents a single driver belonging to a carrier.",
+        "properties": {
+            "id": { "type": "string" },
+            "carrierId": { "type": "string", "$ref": "#/entities/Carrier/properties/id" },
+            "truckNum": { "type": "string" },
+            "trailerNum": { "type": "string" },
+            "trailerType": { "type": "string" },
+            "maxWeight": { "type": "string" },
+            "driverName": { "type": "string" },
+            "driverCell": { "type": "string" }
+        },
+        "required": ["id", "carrierId"]
+    },
+    "CarrierOperation": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CarrierOperation",
+        "type": "object",
+        "description": "Carrier's area of operation and rate information.",
+        "properties": {
+            "id": { "type": "string" },
+            "carrierId": { "type": "string", "$ref": "#/entities/Carrier/properties/id" },
+            "canadaProvinces": { "type": "string" },
+            "mexico": { "type": "string" },
+            "states": { "type": "array", "items": { "type": "string" } },
+            "minRatePerMile": { "type": "number" },
+            "maxPicks": { "type": "integer" },
+            "maxDrops": { "type": "integer" },
+            "perPickDrop": { "type": "number" },
+            "driverTouch": { "type": "boolean" },
+            "driverTouchComments": { "type": "string" }
+        },
+        "required": ["id", "carrierId"]
+    },
+    "CarrierFactoring": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CarrierFactoring",
+        "type": "object",
+        "description": "Carrier's factoring company details.",
+        "properties": {
+            "id": { "type": "string" },
+            "carrierId": { "type": "string", "$ref": "#/entities/Carrier/properties/id" },
+            "factoringCompany": { "type": "string" },
+            "mainContact": { "type": "string" },
+            "phone": { "type": "string" },
+            "fax": { "type": "string" },
+            "websiteUrl": { "type": "string", "format": "uri" },
+            "address": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "zip": { "type": "string" }
+        },
+        "required": ["id", "carrierId"]
+    },
+    "CarrierInsurance": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CarrierInsurance",
+        "type": "object",
+        "description": "Carrier's insurance agency details.",
+        "properties": {
+            "id": { "type": "string" },
+            "carrierId": { "type": "string", "$ref": "#/entities/Carrier/properties/id" },
+            "insuranceAgency": { "type": "string" },
+            "mainContact": { "type": "string" },
+            "phone": { "type": "string" },
+            "fax": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "address": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "zip": { "type": "string" },
+            "companyDescription": { "type": "string" }
+        },
+        "required": ["id", "carrierId"]
     }
   },
   "auth": {
@@ -173,73 +240,52 @@
     "structure": [
       {
         "path": "/leads/{leadId}",
-        "definition": {
-          "entityName": "Lead",
-          "schema": {
-            "$ref": "#/backend/entities/Lead"
-          },
-          "description": "Stores lead information captured from the web form.",
-          "params": [
-            {
-              "name": "leadId",
-              "description": "Unique identifier for the lead document."
-            }
-          ]
-        }
+        "definition": { "schema": { "$ref": "#/entities/Lead" }, "description": "Stores lead information captured from the web form." }
       },
       {
         "path": "/leads/{leadId}/appointments/{appointmentId}",
-        "definition": {
-          "entityName": "Appointment",
-          "schema": {
-            "$ref": "#/backend/entities/Appointment"
-          },
-          "description": "Stores appointment information for a specific lead.",
-          "params": [
-            {
-              "name": "leadId",
-              "description": "Unique identifier for the lead document."
-            },
-            {
-              "name": "appointmentId",
-              "description": "Unique identifier for the appointment document."
-            }
-          ]
-        }
+        "definition": { "schema": { "$ref": "#/entities/Appointment" }, "description": "Stores appointment information for a specific lead." }
       },
       {
         "path": "/testimonials/{testimonialId}",
-        "definition": {
-          "entityName": "Testimonial",
-          "schema": {
-            "$ref": "#/backend/entities/Testimonial"
-          },
-          "description": "Stores client testimonial information.",
-          "params": [
-            {
-              "name": "testimonialId",
-              "description": "Unique identifier for the testimonial document."
-            }
-          ]
-        }
+        "definition": { "schema": { "$ref": "#/entities/Testimonial" }, "description": "Stores client testimonial information." }
       },
       {
         "path": "/faqs/{faqId}",
-        "definition": {
-          "entityName": "FAQ",
-          "schema": {
-            "$ref": "#/backend/entities/FAQ"
-          },
-          "description": "Stores frequently asked questions and their answers.",
-          "params": [
-            {
-              "name": "faqId",
-              "description": "Unique identifier for the FAQ document."
-            }
-          ]
-        }
+        "definition": { "schema": { "$ref": "#/entities/FAQ" }, "description": "Stores frequently asked questions and their answers." }
+      },
+      {
+          "path": "/carriers/{carrierId}",
+          "definition": { "schema": { "$ref": "#/entities/Carrier" }, "description": "Stores the main profile for a carrier." }
+      },
+      {
+          "path": "/carriers/{carrierId}/equipment/{equipmentId}",
+          "definition": { "schema": { "$ref": "#/entities/CarrierEquipment" }, "description": "Stores summary of a carrier's equipment." }
+      },
+      {
+          "path": "/carriers/{carrierId}/tractors/{tractorId}",
+          "definition": { "schema": { "$ref": "#/entities/CarrierTractor" }, "description": "Stores individual tractors for a carrier." }
+      },
+      {
+          "path": "/carriers/{carrierId}/trailers/{trailerId}",
+          "definition": { "schema": { "$ref": "#/entities/CarrierTrailer" }, "description": "Stores individual trailers for a carrier." }
+      },
+      {
+          "path": "/carriers/{carrierId}/drivers/{driverId}",
+          "definition": { "schema": { "$ref": "#/entities/CarrierDriver" }, "description": "Stores individual drivers for a carrier." }
+      },
+      {
+          "path": "/carriers/{carrierId}/operations/{operationId}",
+          "definition": { "schema": { "$ref": "#/entities/CarrierOperation" }, "description": "Stores operational details for a carrier." }
+      },
+      {
+          "path": "/carriers/{carrierId}/factoring/{factoringId}",
+          "definition": { "schema": { "$ref": "#/entities/CarrierFactoring" }, "description": "Stores factoring details for a carrier." }
+      },
+      {
+          "path": "/carriers/{carrierId}/insurance/{insuranceId}",
+          "definition": { "schema": { "$ref": "#/entities/CarrierInsurance" }, "description": "Stores insurance details for a carrier." }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to support the Dispatch Pro application's core features, focusing on lead capture, appointment booking, testimonials, and FAQs. \n\nLeads and Appointments are structured to maintain a clear relationship between them. Appointments are stored as subcollections of Leads to reflect the 1:N relationship (one lead can have multiple appointments). This approach ensures data locality and simplifies queries related to a specific lead's appointments.\n\nTestimonials and FAQs are stored in root-level collections. This segregation is done as these entities do not have explicit ownership and are designed to be generally accessed.\n\n*Authorization Independence*: To ensure authorization independence, we avoid `get()` calls in the rules. Since appointments are in a subcollection of leads, any authorization-related information for appointments MUST be denormalized into the Appointment documents themselves. However, given the current requirements, this denormalization isn't strictly needed, as no specific user roles or access control are described.\n\n*QAPs (Rules are not Filters)*: The proposed structure supports secure `list` operations. Since Testimonials and FAQs are in root collections with homogeneous data, filtering can be done using query constraints without compromising security. The Leads and Appointments collections will also support simple rules, even though no specific rules are defined in the current context."
+    ]
   }
 }
