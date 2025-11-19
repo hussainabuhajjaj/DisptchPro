@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, FormProvider, useFormContext, useFieldArray, Control, FieldPath } from 'react-hook-form';
+import { useForm, FormProvider, useFormContext, useFieldArray, Control, FieldPath, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -12,10 +12,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { ArrowRight, ArrowLeft, LoaderCircle, Check, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, LoaderCircle, Check, PlusCircle, Trash2, Edit } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { ScrollArea } from '../ui/scroll-area';
 
 const carrierInfoSchema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
@@ -129,14 +130,15 @@ const fullFormSchema = z.object({
   insuranceInfo: insuranceInfoSchema,
 });
 
-type FullFormValues = z.infer<typeof fullFormSchema>;
+export type FullFormValues = z.infer<typeof fullFormSchema>;
 
 const steps = [
-  { id: 'carrierInfo', title: 'Carrier Information', schema: carrierInfoSchema },
-  { id: 'equipmentInfo', title: 'Equipment', schema: equipmentInfoSchema },
-  { id: 'operationInfo', title: 'Operation', schema: operationInfoSchema },
-  { id: 'factoringInfo', title: 'Factoring', schema: factoringInfoSchema },
-  { id: 'insuranceInfo', title: 'Insurance & Details', schema: insuranceInfoSchema },
+  { id: 'carrierInfo' as const, title: 'Carrier Information', schema: carrierInfoSchema },
+  { id: 'equipmentInfo' as const, title: 'Equipment', schema: equipmentInfoSchema },
+  { id: 'operationInfo' as const, title: 'Operation', schema: operationInfoSchema },
+  { id: 'factoringInfo' as const, title: 'Factoring', schema: factoringInfoSchema },
+  { id: 'insuranceInfo' as const, title: 'Insurance & Details', schema: insuranceInfoSchema },
+  { id: 'preview' as const, title: 'Preview & Submit' },
 ];
 
 function CarrierInfoForm() {
@@ -654,6 +656,149 @@ function InsuranceInfoForm() {
     );
 }
 
+const PreviewSection = ({ title, onEdit, children }: { title: string; onEdit: () => void; children: React.ReactNode }) => (
+    <div className="space-y-4">
+        <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-primary">{title}</h3>
+            <Button variant="ghost" size="sm" onClick={onEdit}>
+                <Edit className="mr-2 h-4 w-4" /> Edit
+            </Button>
+        </div>
+        <div className="space-y-2 rounded-md border p-4 text-sm">{children}</div>
+    </div>
+);
+
+const PreviewItem = ({ label, value }: { label: string, value?: string | number | string[] | null }) => {
+  if (!value || (Array.isArray(value) && value.length === 0)) return null;
+  return (
+    <div className="flex flex-col sm:flex-row sm:gap-2">
+      <p className="font-semibold w-full sm:w-1/3">{label}:</p>
+      <p className="w-full sm:w-2/3">{Array.isArray(value) ? value.join(', ') : value}</p>
+    </div>
+  );
+};
+
+const PreviewTable = ({ title, data, columns }: { title: string, data?: any[], columns: { key: string, label: string }[] }) => {
+  if (!data || data.length === 0) return null;
+  return (
+    <div>
+        <h4 className="font-semibold mt-4 mb-2">{title}</h4>
+        <div className="overflow-x-auto rounded-md border">
+            <table className="w-full text-left text-sm">
+                <thead className="bg-muted/50">
+                    <tr>{columns.map(c => <th key={c.key} className="p-2 font-medium">{c.label}</th>)}</tr>
+                </thead>
+                <tbody>
+                    {data.map((row, i) => (
+                        <tr key={i} className="border-t">
+                            {columns.map(c => <td key={c.key} className="p-2">{row[c.key]}</td>)}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+  );
+}
+
+
+function PreviewForm({ onEdit }: { onEdit: (step: number) => void }) {
+    const { control } = useFormContext<FullFormValues>();
+    const formData = useWatch({ control });
+    const { carrierInfo, equipmentInfo, operationInfo, factoringInfo, insuranceInfo } = formData;
+
+    return (
+        <ScrollArea className="h-[60vh]">
+        <div className="space-y-8 p-1">
+            <PreviewSection title="Carrier Information" onEdit={() => onEdit(0)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                    <PreviewItem label="Company Name" value={carrierInfo.companyName} />
+                    <PreviewItem label="DBA" value={carrierInfo.dba} />
+                    <PreviewItem label="Physical Address" value={`${carrierInfo.physicalAddress}, ${carrierInfo.physicalCity}, ${carrierInfo.physicalState} ${carrierInfo.physicalZip}`} />
+                    {carrierInfo.mailingAddress && <PreviewItem label="Mailing Address" value={`${carrierInfo.mailingAddress}, ${carrierInfo.mailingCity}, ${carrierInfo.mailingState} ${carrierInfo.mailingZip}`} />}
+                    <PreviewItem label="Main Contact" value={carrierInfo.mainContact} />
+                    <PreviewItem label="Email" value={carrierInfo.email} />
+                    <PreviewItem label="Office Phone" value={carrierInfo.officePhone} />
+                    <PreviewItem label="Fax" value={carrierInfo.fax} />
+                    <PreviewItem label="Cell Phone" value={carrierInfo.cellPhone} />
+                    <PreviewItem label="Emergency Contact" value={carrierInfo.emergencyContact} />
+                    <PreviewItem label="Emergency Phone" value={carrierInfo.emergencyPhone} />
+                    <PreviewItem label="MC #" value={carrierInfo.mcNumber} />
+                    <PreviewItem label="DOT #" value={carrierInfo.dotNumber} />
+                    <PreviewItem label="EIN #" value={carrierInfo.einNumber} />
+                    <PreviewItem label="SCAC Code" value={carrierInfo.scacCode} />
+                    <PreviewItem label="TWIC Certified" value={carrierInfo.twicCertified} />
+                    <PreviewItem label="Hazmat Certified" value={carrierInfo.hazmatCertified} />
+                </div>
+            </PreviewSection>
+
+            <PreviewSection title="Equipment Information" onEdit={() => onEdit(1)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                    <PreviewItem label="# of Trucks" value={equipmentInfo.numTrucks} />
+                    <PreviewItem label="Company Drivers" value={equipmentInfo.companyDrivers} />
+                    <PreviewItem label="Owner Operators" value={equipmentInfo.ownerOperators} />
+                    <PreviewItem label="Team Drivers" value={equipmentInfo.teamDrivers} />
+                    <PreviewItem label="# of Trailers" value={equipmentInfo.numTrailers} />
+                    <PreviewItem label="Van Trailers" value={equipmentInfo.vanTrailers} />
+                    <PreviewItem label="Reefer Trailers" value={equipmentInfo.reeferTrailers} />
+                    <PreviewItem label="Flatbed Trailers" value={equipmentInfo.flatbedTrailers} />
+                    <PreviewItem label="Tanker Trailers" value={equipmentInfo.tankerTrailers} />
+                    <PreviewItem label="Other Trailer Types" value={equipmentInfo.otherTrailerTypes} />
+                    <PreviewItem label="Van Sizes" value={equipmentInfo.vanSizes} />
+                    <PreviewItem label="Reefer Sizes" value={equipmentInfo.reeferSizes} />
+                    <PreviewItem label="Flatbed Sizes" value={equipmentInfo.flatbedSizes} />
+                    <PreviewItem label="Tanker Sizes" value={equipmentInfo.tankerSizes} />
+                </div>
+                <PreviewTable title="Tractors" data={equipmentInfo.tractors} columns={[{ key: 'year', label: 'Year' }, { key: 'makeModel', label: 'Make/Model' }, { key: 'truckNum', label: 'Truck #' }, { key: 'vin', label: 'VIN #' }]} />
+                <PreviewTable title="Trailers" data={equipmentInfo.trailers} columns={[{ key: 'year', label: 'Year' }, { key: 'makeModel', label: 'Make/Model' }, { key: 'trailerNum', label: 'Trailer #' }, { key: 'vin', label: 'VIN #' }]} />
+                <PreviewTable title="Drivers" data={equipmentInfo.drivers} columns={[{ key: 'truckNum', label: 'Truck #' }, { key: 'trailerNum', label: 'Trailer #' }, { key: 'trailerType', label: 'Trailer Type' }, { key: 'maxWeight', label: 'Max Weight' }, { key: 'driverName', label: 'Driver Name' }, { key: 'driverCell', label: 'Driver Cell' }]} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 mt-4">
+                  <PreviewItem label="Drivers can make load decisions" value={equipmentInfo.driversCanMakeDecisions} />
+                  <PreviewItem label="Drivers need copy of confirmation" value={equipmentInfo.driversNeedCopy} />
+                </div>
+                <PreviewItem label="Equipment Description" value={equipmentInfo.equipmentDescription} />
+            </PreviewSection>
+
+            <PreviewSection title="Area of Operation" onEdit={() => onEdit(2)}>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                    <PreviewItem label="Canada Provinces" value={operationInfo.canadaProvinces} />
+                    <PreviewItem label="Mexico" value={operationInfo.mexico} />
+                    <PreviewItem label="US States" value={operationInfo.states} />
+                    <PreviewItem label="Min. Rate / Mile" value={operationInfo.minRatePerMile} />
+                    <PreviewItem label="Max Picks" value={operationInfo.maxPicks} />
+                    <PreviewItem label="Max Drops" value={operationInfo.maxDrops} />
+                    <PreviewItem label="$ Per Pick/Drop" value={operationInfo.perPickDrop} />
+                    <PreviewItem label="Driver Touch" value={operationInfo.driverTouch} />
+                    <PreviewItem label="Driver Touch Comments" value={operationInfo.driverTouchComments} />
+                 </div>
+            </PreviewSection>
+
+             <PreviewSection title="Factoring Information" onEdit={() => onEdit(3)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                    <PreviewItem label="Factoring Company" value={factoringInfo.factoringCompany} />
+                    <PreviewItem label="Main Contact" value={factoringInfo.mainContact} />
+                    <PreviewItem label="Phone" value={factoringInfo.phone} />
+                    <PreviewItem label="Fax" value={factoringInfo.fax} />
+                    <PreviewItem label="Website URL" value={factoringInfo.websiteUrl} />
+                    {factoringInfo.address && <PreviewItem label="Address" value={`${factoringInfo.address}, ${factoringInfo.city}, ${factoringInfo.state} ${factoringInfo.zip}`} />}
+                </div>
+            </PreviewSection>
+
+             <PreviewSection title="Insurance Information" onEdit={() => onEdit(4)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                    <PreviewItem label="Insurance Agency" value={insuranceInfo.insuranceAgency} />
+                    <PreviewItem label="Main Contact" value={insuranceInfo.mainContact} />
+                    <PreviewItem label="Phone" value={insuranceInfo.phone} />
+                    <PreviewItem label="Fax" value={insuranceInfo.fax} />
+                    <PreviewItem label="Email" value={insuranceInfo.email} />
+                    {insuranceInfo.address && <PreviewItem label="Address" value={`${insuranceInfo.address}, ${insuranceInfo.city}, ${insuranceInfo.state} ${insuranceInfo.zip}`} />}
+                </div>
+                <PreviewItem label="Company Description" value={insuranceInfo.companyDescription} />
+            </PreviewSection>
+        </div>
+        </ScrollArea>
+    );
+}
 
 export default function CarrierProfileForm() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -696,20 +841,33 @@ export default function CarrierProfileForm() {
     mode: 'onChange',
   });
 
-  const { handleSubmit, trigger } = methods;
+  const { handleSubmit, trigger, formState } = methods;
 
   const processForm = async (data: FullFormValues) => {
     setIsSubmitting(true);
-    console.log('Form data:', data);
-    // Here you would typically save the data to Firestore
+    console.log('Form data submitted:', data);
+    
+    // TODO: Implement email sending logic here.
+    // Example: await sendCarrierSubmissionEmail(data);
+    console.log(`Placeholder: An email would be sent to ${data.carrierInfo.email} with the submission details.`);
+    
+    // In a real application, you would save this data to a database (e.g., Firestore)
+    // For now, we simulate a network delay.
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
     setIsSubmitting(false);
     setFormCompleted(true);
   };
   
   const nextStep = async () => {
-    const stepId = steps[currentStep].id as FieldPath<FullFormValues>;
-    const isValid = await trigger(stepId, { shouldFocus: true });
+    const currentStepConfig = steps[currentStep];
+    const stepId = currentStepConfig.id;
+    let isValid = true;
+    
+    // Only validate if there's a schema for the current step
+    if ('schema' in currentStepConfig) {
+      isValid = await trigger(stepId as FieldPath<FullFormValues>, { shouldFocus: true });
+    }
     
     if (isValid && currentStep < steps.length - 1) {
       setCurrentStep(step => step + 1);
@@ -721,6 +879,13 @@ export default function CarrierProfileForm() {
       setCurrentStep(step => step - 1);
     }
   };
+
+  const goToStep = (step: number) => {
+    if (step >= 0 && step < steps.length -1) {
+        setCurrentStep(step);
+    }
+  }
+
 
   if (isSubmitting) {
     return (
@@ -738,7 +903,7 @@ export default function CarrierProfileForm() {
             <Check className="h-16 w-16 text-green-500" />
             <h2 className="text-2xl font-bold tracking-tighter">Profile Submitted!</h2>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              Thank you for completing your profile. We will review it and get in touch shortly.
+              Thank you for completing your profile. An email has been sent to you with your submitted details. We will review your information and get in touch shortly.
               <br/>
               <span className="font-semibold mt-2 block">Please keep a blank copy of this form, and email updates to us when they occur, this way we have the most current information on hand.</span>
             </p>
@@ -750,14 +915,14 @@ export default function CarrierProfileForm() {
     <Card className="w-full">
         <CardHeader>
             <div className="flex items-start justify-center p-4">
-              <ol className="flex items-center w-full max-w-2xl">
+              <ol className="flex items-center w-full max-w-4xl">
                 {steps.map((step, index) => (
                   <li key={step.id} className={cn(
                       "relative flex w-full items-center",
                       index < steps.length - 1 ? "after:content-[''] after:w-full after:h-1 after:border-b after:border-4 after:inline-block" : "",
-                      index <= currentStep ? "after:border-primary" : "after:border-muted",
+                      index < currentStep ? "after:border-primary" : "after:border-muted",
                   )}>
-                    <div className="flex flex-col items-center">
+                    <button type="button" onClick={() => goToStep(index)} className="flex flex-col items-center" disabled={index >= currentStep && !formState.isValid}>
                         <div className={cn(
                             "flex items-center justify-center w-10 h-10 rounded-full shrink-0",
                             index <= currentStep ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
@@ -769,7 +934,7 @@ export default function CarrierProfileForm() {
                              index <= currentStep ? "font-bold text-primary" : "text-muted-foreground",
                              "hidden md:block"
                         )}>{step.title}</p>
-                    </div>
+                    </button>
                   </li>
                 ))}
               </ol>
@@ -779,11 +944,12 @@ export default function CarrierProfileForm() {
       <CardContent className="p-4 md:p-6">
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(processForm)} className="space-y-8">
-            {currentStep === 0 && <CarrierInfoForm />}
-            {currentStep === 1 && <EquipmentInfoForm />}
-            {currentStep === 2 && <OperationInfoForm />}
-            {currentStep === 3 && <FactoringInfoForm />}
-            {currentStep === 4 && <InsuranceInfoForm />}
+            <div className={currentStep === 0 ? 'block' : 'hidden'}><CarrierInfoForm /></div>
+            <div className={currentStep === 1 ? 'block' : 'hidden'}><EquipmentInfoForm /></div>
+            <div className={currentStep === 2 ? 'block' : 'hidden'}><OperationInfoForm /></div>
+            <div className={currentStep === 3 ? 'block' : 'hidden'}><FactoringInfoForm /></div>
+            <div className={currentStep === 4 ? 'block' : 'hidden'}><InsuranceInfoForm /></div>
+            <div className={currentStep === 5 ? 'block' : 'hidden'}><PreviewForm onEdit={goToStep} /></div>
           </form>
         </FormProvider>
       </CardContent>
@@ -804,3 +970,5 @@ export default function CarrierProfileForm() {
     </Card>
   );
 }
+
+    
