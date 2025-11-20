@@ -41,6 +41,7 @@ export default function WhyChooseUs() {
                     fill
                     className="object-cover"
                     data-ai-hint={whyChooseUsImage.imageHint}
+                    sizes="(max-width: 768px) 100vw, 50vw"
                 />
             )}
             <div className="absolute inset-0 bg-black/20" />

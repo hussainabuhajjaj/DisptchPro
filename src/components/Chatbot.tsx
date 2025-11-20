@@ -79,6 +79,7 @@ function PreChatForm({onSubmit}: {onSubmit: (details: UserDetails) => void}) {
             onChange={e => setDetails({...details, name: e.target.value})}
             required
             placeholder="John Doe"
+            aria-label="Name"
           />
         </div>
         <div className="space-y-2">
@@ -90,6 +91,7 @@ function PreChatForm({onSubmit}: {onSubmit: (details: UserDetails) => void}) {
             onChange={e => setDetails({...details, email: e.target.value})}
             required
             placeholder="john.doe@example.com"
+            aria-label="Email"
           />
         </div>
         <div className="space-y-2">
@@ -99,6 +101,7 @@ function PreChatForm({onSubmit}: {onSubmit: (details: UserDetails) => void}) {
             value={details.company}
             onChange={e => setDetails({...details, company: e.target.value})}
             placeholder="Acme Inc."
+            aria-label="Company Name"
           />
         </div>
         <Button type="submit" className="w-full">
@@ -170,6 +173,7 @@ export default function Chatbot() {
           size="icon"
           className="rounded-full w-14 h-14 shadow-lg"
           onClick={() => setIsOpen(!isOpen)}
+          aria-label="Toggle Chatbot"
         >
           {isOpen ? <X /> : <MessageSquare />}
           <span className="sr-only">Toggle Chatbot</span>
@@ -232,6 +236,7 @@ export default function Chatbot() {
                     name="message"
                     placeholder="Type your message..."
                     autoComplete="off"
+                    aria-label="Chat message"
                   />
                   <input
                     type="hidden"

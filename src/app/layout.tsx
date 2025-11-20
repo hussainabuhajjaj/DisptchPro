@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Chatbot from "@/components/Chatbot";
 import { FirebaseClientProvider } from "@/firebase";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: 'swap' });
 
 export const metadata: Metadata = {
   title: "Dispatch Pro - Your Logistics Partner",
