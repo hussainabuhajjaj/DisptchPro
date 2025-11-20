@@ -5,12 +5,9 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore'
 
-let firebaseApp: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
+  let firebaseApp: FirebaseApp;
   if (!getApps().length) {
     // Important! initializeApp() is called without any arguments because Firebase App Hosting
     // integrates with the initializeApp() function to provide the environment variables needed to
@@ -31,9 +28,6 @@ export function initializeFirebase() {
     firebaseApp = getApp();
   }
 
-  auth = getAuth(firebaseApp);
-  firestore = getFirestore(firebaseApp);
-  
   return getSdks(firebaseApp);
 }
 
