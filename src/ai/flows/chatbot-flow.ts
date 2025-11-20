@@ -75,13 +75,11 @@ Company: ${userDetails.company || 'Not provided'}
 
     const {output} = await generate({
       model: ai.model,
-      history: [
-        {role: 'system', content: [{text: systemPrompt}]},
-        ...history.map(h => ({
+      system: systemPrompt,
+      history: history.map(h => ({
           role: h.role,
           content: [{text: h.content}],
         })),
-      ],
       prompt: message,
     });
 
