@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
-import Chatbot from "@/components/Chatbot";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: 'swap' });
 
@@ -30,7 +29,6 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
-        <Chatbot />
         <Toaster />
       </body>
     </html>
