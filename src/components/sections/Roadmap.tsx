@@ -47,6 +47,7 @@ export default function Roadmap() {
               )}>
                 <div className="hidden md:block relative">
                    <div className="w-4 h-4 bg-primary rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" />
+                   <div className="w-4 h-4 bg-primary rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 animate-ping" />
                 </div>
                 <Card className={cn(
                   "w-full transition-all duration-300",
