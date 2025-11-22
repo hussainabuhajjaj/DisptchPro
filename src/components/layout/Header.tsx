@@ -20,7 +20,9 @@ import { useRouter } from "next/navigation";
 
 const navLinks = [
   { href: "/#services", label: "Services" },
-  { href: "/#why-us", label: "Why Us" },
+  { href: "/#why-us", label: "For Carriers" },
+  { href: "/#for-shippers", label: "For Shippers" },
+  { href: "/#for-brokers", label: "For Brokers" },
   { href: "/#roadmap", label: "Roadmap" },
   { href: "/#testimonials", label: "Testimonials" },
   { href: "/#faq", label: "FAQ" },

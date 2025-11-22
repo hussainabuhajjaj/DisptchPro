@@ -29,6 +29,18 @@
       "description": "A logistics control center with multiple screens showing maps and data.",
       "imageUrl": "https://images.unsplash.com/photo-1616445514247-c008b6a3782d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMzczNDV8MHwxfHNlYXJjaHwxfHxsb2dpc3RpY3MlMjBjb250cm9sJTIwcm9vbXxlbnwwfHx8fDE2NzM0MjYwMjV8MA&ixlib=rb-4.0.3&q=80&w=1080",
       "imageHint": "logistics control"
+    },
+    {
+      "id": "for-shippers",
+      "description": "A large warehouse with stacks of boxes and workers moving them with forklifts, representing shipping and logistics.",
+      "imageUrl": "https://images.unsplash.com/photo-1644079446600-219068676743?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3YXJlaG91c2UlMjBsb2dpc3RpY3N8ZW58MHx8fHwxNzYzNzg1Mzk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "warehouse logistics"
+    },
+    {
+      "id": "for-brokers",
+      "description": "Two professionals shaking hands in a modern office, representing a successful business partnership for brokers.",
+      "imageUrl": "https://images.unsplash.com/photo-1600880292089-90a7e086ee0c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxidXNpbmVzcyUyMHBhcnRuZXJzaGlwfGVufDB8fHx8MTc2MzcxNjQ3NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "business partnership"
     }
   ]
 }
