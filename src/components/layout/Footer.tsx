@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Phone, MessageCircle, Truck } from "lucide-react";
+import { Mail, Phone, MessageCircle, Truck, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const contactMethods = [
@@ -60,10 +60,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t pt-8">
-          <p className="text-center text-sm text-muted-foreground">
+        <div className="mt-12 border-t pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-muted-foreground text-center sm:text-left">
             © {new Date().getFullYear()} H&A Dispatch. All Rights Reserved.
           </p>
+          <Button variant="link" asChild className="p-0 h-auto text-muted-foreground">
+            <Link href="/api/docs" className="flex items-center gap-2">
+              <FileCode className="h-4 w-4" />
+              <span>API Docs</span>
+            </Link>
+          </Button>
         </div>
       </div>
     </footer>
