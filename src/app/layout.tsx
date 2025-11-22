@@ -11,7 +11,7 @@ import { FirebaseClientProvider } from "@/firebase";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: 'swap' });
 
 export const metadata: Metadata = {
-  title: "Dispatch Pro - Your Logistics Partner",
+  title: "H&A Dispatch - Your Logistics Partner",
   description: "Expert dispatching services to optimize your logistics and keep your fleet moving. We offer lead capture, appointment booking, and 24/7 support.",
 };
 

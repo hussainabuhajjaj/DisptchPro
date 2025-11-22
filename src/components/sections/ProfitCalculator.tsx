@@ -23,7 +23,7 @@ export default function ProfitCalculator() {
         return { currentRevenue: 0, potentialRevenue: 0, weeklyIncrease: 0, annualIncrease: 0 };
     }
 
-    // Assumed improvements with Dispatch Pro
+    // Assumed improvements with H&A Dispatch
     const deadheadReductionFactor = 0.5; // We cut deadhead in half
     const rateIncreaseFactor = 1.15; // We increase rates by 15%
 
@@ -67,7 +67,7 @@ export default function ProfitCalculator() {
             See Your Potential Earnings
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Use our calculator to estimate how much more you could earn with Dispatch Pro optimizing your loads and routes.
+            Use our calculator to estimate how much more you could earn with H&A Dispatch optimizing your loads and routes.
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export default function ProfitCalculator() {
                         <TrendingUp className="h-8 w-8 text-primary"/>
                         <CardTitle className="text-2xl">Your Potential Growth</CardTitle>
                     </div>
-                    <CardDescription>Estimated increase with Dispatch Pro handling your logistics.</CardDescription>
+                    <CardDescription>Estimated increase with H&A Dispatch handling your logistics.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0 space-y-6">
                     <div className="text-center bg-background/50 p-6 rounded-lg shadow-inner">

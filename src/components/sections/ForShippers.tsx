@@ -25,7 +25,7 @@ export default function ForShippers() {
               Your Freight, Delivered On-Time, Every Time.
             </h2>
             <p className="text-lg text-muted-foreground">
-              Focus on your business, we'll handle the logistics. Dispatch Pro provides reliable, efficient, and cost-effective shipping solutions tailored to your needs.
+              Focus on your business, we'll handle the logistics. H&A Dispatch provides reliable, efficient, and cost-effective shipping solutions tailored to your needs.
             </p>
             <ul className="grid gap-3 text-lg">
                 {benefits.map((benefit, index) => (

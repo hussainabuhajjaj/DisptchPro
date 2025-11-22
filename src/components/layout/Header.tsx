@@ -83,7 +83,7 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <Truck className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg text-foreground">Dispatch Pro</span>
+          <span className="font-bold text-lg text-foreground">H&A Dispatch</span>
         </Link>
 
         <nav className="hidden items-center gap-4 md:flex">
@@ -122,11 +122,11 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side="right">
                 <SheetTitle className="sr-only">Menu</SheetTitle>
-                <SheetDescription className="sr-only">Main navigation menu for Dispatch Pro</SheetDescription>
+                <SheetDescription className="sr-only">Main navigation menu for H&A Dispatch</SheetDescription>
               <div className="flex flex-col gap-6 p-6">
                 <Link href="/" className="flex items-center gap-2">
                    <Truck className="h-6 w-6 text-primary" />
-                   <span className="font-bold">Dispatch Pro</span>
+                   <span className="font-bold">H&A Dispatch</span>
                 </Link>
                 <nav className="flex flex-col gap-4">
                   {navLinks.map((link) => (

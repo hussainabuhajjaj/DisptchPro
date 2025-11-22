@@ -18,8 +18,8 @@ const contactMethods = [
   {
     Icon: Mail,
     label: "Email",
-    href: "mailto:contact@dispatchpro.com", // Replace with your email
-    value: "contact@dispatchpro.com",
+    href: "mailto:contact@hadispatch.com", // Replace with your email
+    value: "contact@hadispatch.com",
   },
 ];
 
@@ -32,7 +32,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center gap-2">
               <Truck className="h-7 w-7 text-primary" />
               <span className="text-xl font-bold text-foreground">
-                Dispatch Pro
+                H&A Dispatch
               </span>
             </Link>
             <p className="text-muted-foreground text-sm">
@@ -62,7 +62,7 @@ export default function Footer() {
 
         <div className="mt-12 border-t pt-8">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Dispatch Pro. All Rights Reserved.
+            © {new Date().getFullYear()} H&A Dispatch. All Rights Reserved.
           </p>
         </div>
       </div>

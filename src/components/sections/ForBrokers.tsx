@@ -37,7 +37,7 @@ export default function ForBrokers() {
               Reliable Capacity, Seamless Partnership.
             </h2>
             <p className="text-lg text-muted-foreground">
-                Partner with Dispatch Pro to access a trusted network of carriers. We ensure your loads are covered by professionals, giving you peace of mind and happy clients.
+                Partner with H&A Dispatch to access a trusted network of carriers. We ensure your loads are covered by professionals, giving you peace of mind and happy clients.
             </p>
             <ul className="grid gap-3 text-lg">
                 {benefits.map((benefit, index) => (

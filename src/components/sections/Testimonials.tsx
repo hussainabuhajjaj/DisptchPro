@@ -14,13 +14,13 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 const testimonials = [
   {
     quote:
-      "Dispatch Pro transformed my operations. My revenue is up 30%, and I have more time to focus on driving. Their team is professional and always available.",
+      "H&A Dispatch transformed my operations. My revenue is up 30%, and I have more time to focus on driving. Their team is professional and always available.",
     name: "John D., Owner-Operator",
     avatarId: "testimonial-avatar-1",
   },
   {
     quote:
-      "Finding profitable loads used to be a nightmare. With Dispatch Pro, I get consistent, high-paying work without the stress. Highly recommended!",
+      "Finding profitable loads used to be a nightmare. With H&A Dispatch, I get consistent, high-paying work without the stress. Highly recommended!",
     name: "Maria S., Small Fleet Owner",
     avatarId: "testimonial-avatar-2",
   },
@@ -43,7 +43,7 @@ export default function Testimonials() {
             What Our Clients Say
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Real stories from truckers and fleet owners who trust Dispatch Pro.
+            Real stories from truckers and fleet owners who trust H&A Dispatch.
           </p>
         </div>
         <Carousel

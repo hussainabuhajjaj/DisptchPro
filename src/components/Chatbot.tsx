@@ -120,7 +120,7 @@ export default function Chatbot() {
     {
       role: 'model',
       content:
-        "Hello! I'm Dispatch Pro's AI assistant. How can I help you today?",
+        "Hello! I'm H&A Dispatch's AI assistant. How can I help you today?",
     },
   ]);
   const [state, formAction] = useActionState(chatAction, initialState);
@@ -185,7 +185,7 @@ export default function Chatbot() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex items-center gap-3">
               <Bot className="text-primary" />
-              <CardTitle className="text-lg">Dispatch Pro Assistant</CardTitle>
+              <CardTitle className="text-lg">H&A Dispatch Assistant</CardTitle>
             </div>
           </CardHeader>
           {!userDetails ? (

@@ -19,7 +19,7 @@ export default function WhyChooseUs() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="flex flex-col gap-6">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">
-              Why Partner with Dispatch Pro?
+              Why Partner with H&A Dispatch?
             </h2>
             <p className="text-lg text-muted-foreground">
               We are more than just a dispatch service; we are your strategic partner in success. We focus on your profitability and efficiency so you can focus on driving.
