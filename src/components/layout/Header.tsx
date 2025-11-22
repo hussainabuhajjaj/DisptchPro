@@ -1,11 +1,8 @@
-
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, Menu, Truck } from "lucide-react";
-import { useUser, useAuth } from "@/firebase";
-import { signOut } from "firebase/auth";
+import { ChevronDown, Menu, Truck, User } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -23,6 +20,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+
+// This is a placeholder for a real user session management hook
+const useUser = () => {
+  const [user, setUser] = React.useState<{ email: string } | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // TODO: Replace with a real session check against your Laravel API
+    const timer = setTimeout(() => {
+       // To test the "logged out" state, set this to null
+      setUser({ email: 'carrier@example.com' });
+      setIsLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return { user, isLoading };
+};
+
 
 const mainNavLinks = [
   { href: "/#services", label: "Services" },
@@ -97,14 +113,12 @@ const NavDropdown = ({
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
+  const { user, isLoading } = useUser();
   const router = useRouter();
 
   const handleLogout = async () => {
-    if (auth) {
-      await signOut(auth);
-    }
+    // TODO: Implement logout with Laravel API
+    console.log("Logging out...");
     router.push("/");
   };
 
@@ -139,16 +153,24 @@ export default function Header() {
           )}
         </nav>
         
-        <div className="hidden md:flex items-center gap-2 ml-4">
-            {!isUserLoading && user && (
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
+            {!isLoading && (
+              user ? (
                 <>
                   <Button variant="ghost" asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </Button>
                   <Button variant="outline" onClick={handleLogout}>Logout</Button>
                 </>
+              ) : (
+                 <Button asChild>
+                    <Link href="/login">Carrier Login</Link>
+                  </Button>
+              )
             )}
           </div>
+        </div>
 
         <div className="md:hidden">
           <Sheet>
@@ -189,14 +211,22 @@ export default function Header() {
                     )
                   })}
                    <div className="border-t pt-4 flex flex-col gap-4">
-                    {!isUserLoading && user && (
+                    {!isLoading && (
+                      user ? (
                         <>
                           <SheetClose asChild>
                             <NavLink href="/dashboard" label="Dashboard" className="text-lg"/>
                           </SheetClose>
                            <Button variant="outline" onClick={handleLogout}>Logout</Button>
                         </>
-                      )}
+                      ) : (
+                         <SheetClose asChild>
+                           <Button asChild className="w-full">
+                              <Link href="/login">Carrier Login</Link>
+                            </Button>
+                         </SheetClose>
+                      )
+                    )}
                   </div>
                 </nav>
               </div>

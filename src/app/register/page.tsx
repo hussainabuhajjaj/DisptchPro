@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,15 +19,20 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    // TODO: Replace with Laravel API call
+    console.log('Registering with:', { email, password });
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Example of a successful registration
       toast({
         title: 'Registration Successful',
         description: "Your account has been created.",
@@ -39,7 +42,7 @@ export default function RegisterPage() {
        toast({
         variant: 'destructive',
         title: 'Registration Failed',
-        description: error.message,
+        description: error.message || "An unknown error occurred.",
       });
     } finally {
       setIsLoading(false);

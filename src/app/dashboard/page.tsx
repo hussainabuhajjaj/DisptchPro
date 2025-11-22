@@ -1,23 +1,41 @@
-
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoaderCircle } from 'lucide-react';
 
+// This is a placeholder for a real user session management hook
+const useUser = () => {
+  const [user, setUser] = useState<{ email: string; uid: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // TODO: Replace with a real session check against your Laravel API
+    // For now, we simulate a logged-in user after a short delay.
+    const timer = setTimeout(() => {
+      // To test the "logged out" state, set this to null
+      setUser({ email: 'carrier@example.com', uid: 'user-id-from-laravel' });
+      setIsLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return { user, isLoading };
+};
+
 export default function DashboardPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isLoading && !user) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isLoading, router]);
 
-  if (isUserLoading || !user) {
+  if (isLoading || !user) {
     return (
       <div className="flex items-center justify-center h-screen">
         <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
@@ -42,7 +60,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                     <p><strong>Email:</strong> {user.email}</p>
-                    <p><strong>UID:</strong> {user.uid}</p>
+                    <p><strong>User ID:</strong> {user.uid}</p>
                 </CardContent>
             </Card>
 
