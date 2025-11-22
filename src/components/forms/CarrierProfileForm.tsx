@@ -1,10 +1,13 @@
 
+
 'use client';
 
 import { useState } from 'react';
 import { useForm, FormProvider, useFormContext, useFieldArray, Control, FieldPath, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useAuth, useFirestore } from '@/firebase';
+import { doc, writeBatch } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -804,6 +807,8 @@ export default function CarrierProfileForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formCompleted, setFormCompleted] = useState(false);
+  const auth = useAuth();
+  const firestore = useFirestore();
 
   const methods = useForm<FullFormValues>({
     resolver: zodResolver(fullFormSchema),
@@ -846,17 +851,72 @@ export default function CarrierProfileForm() {
   const processForm = async (data: FullFormValues) => {
     setIsSubmitting(true);
     console.log('Form data submitted:', data);
-    
-    // TODO: Implement email sending logic here.
-    // Example: await sendCarrierSubmissionEmail(data);
-    console.log(`Placeholder: An email would be sent to ${data.carrierInfo.email} with the submission details.`);
-    
-    // In a real application, you would save this data to a database (e.g., Firestore)
-    // For now, we simulate a network delay.
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setFormCompleted(true);
+
+    if (!auth.currentUser) {
+        console.error("User is not authenticated. Cannot save carrier profile.");
+        setIsSubmitting(false);
+        // Optionally, show a toast or message to the user
+        return;
+    }
+
+    try {
+        const carrierId = auth.currentUser.uid;
+        const batch = writeBatch(firestore);
+
+        // Main Carrier document
+        const carrierRef = doc(firestore, 'carriers', carrierId);
+        batch.set(carrierRef, data.carrierInfo);
+
+        // Sub-collections
+        const { equipmentInfo, operationInfo, factoringInfo, insuranceInfo } = data;
+
+        // Equipment
+        if (Object.keys(equipmentInfo).some(key => equipmentInfo[key as keyof typeof equipmentInfo])) {
+            const equipmentRef = doc(firestore, `carriers/${carrierId}/equipment`, 'main');
+            const { tractors, trailers, drivers, ...mainEquipmentData } = equipmentInfo;
+            batch.set(equipmentRef, mainEquipmentData);
+
+            tractors?.forEach(tractor => {
+                const tractorRef = doc(firestore, `carriers/${carrierId}/tractors`, tractor.vin || crypto.randomUUID());
+                batch.set(tractorRef, tractor);
+            });
+            trailers?.forEach(trailer => {
+                const trailerRef = doc(firestore, `carriers/${carrierId}/trailers`, trailer.vin || crypto.randomUUID());
+                batch.set(trailerRef, trailer);
+            });
+            drivers?.forEach(driver => {
+                const driverRef = doc(firestore, `carriers/${carrierId}/drivers`, driver.driverCell || crypto.randomUUID());
+                batch.set(driverRef, driver);
+            });
+        }
+        
+        // Operation
+        if (Object.keys(operationInfo).some(key => operationInfo[key as keyof typeof operationInfo])) {
+            const operationRef = doc(firestore, `carriers/${carrierId}/operations`, 'main');
+            batch.set(operationRef, operationInfo);
+        }
+        
+        // Factoring
+        if (Object.keys(factoringInfo).some(key => factoringInfo[key as keyof typeof factoringInfo])) {
+            const factoringRef = doc(firestore, `carriers/${carrierId}/factoring`, 'main');
+            batch.set(factoringRef, factoringInfo);
+        }
+        
+        // Insurance
+        if (Object.keys(insuranceInfo).some(key => insuranceInfo[key as keyof typeof insuranceInfo])) {
+            const insuranceRef = doc(firestore, `carriers/${carrierId}/insurance`, 'main');
+            batch.set(insuranceRef, insuranceInfo);
+        }
+        
+        await batch.commit();
+        console.log("Carrier profile successfully saved to Firestore.");
+        setFormCompleted(true);
+    } catch (error) {
+        console.error("Error saving carrier profile to Firestore: ", error);
+        // Optionally, show an error toast to the user
+    } finally {
+        setIsSubmitting(false);
+    }
   };
   
   const nextStep = async () => {
@@ -903,7 +963,7 @@ export default function CarrierProfileForm() {
             <Check className="h-16 w-16 text-green-500" />
             <h2 className="text-2xl font-bold tracking-tighter">Profile Submitted!</h2>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              Thank you for completing your profile. An email has been sent to you with your submitted details. We will review your information and get in touch shortly.
+              Thank you for completing your profile. Your information has been securely saved to our database. We will review your information and get in touch shortly.
               <br/>
               <span className="font-semibold mt-2 block">Please keep a blank copy of this form, and email updates to us when they occur, this way we have the most current information on hand.</span>
             </p>
@@ -970,5 +1030,7 @@ export default function CarrierProfileForm() {
     </Card>
   );
 }
+
+    
 
     
