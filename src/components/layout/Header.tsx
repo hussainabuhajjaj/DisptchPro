@@ -140,24 +140,14 @@ export default function Header() {
         </nav>
         
         <div className="hidden md:flex items-center gap-2 ml-4">
-            {!isUserLoading &&
-              (user ? (
+            {!isUserLoading && user && (
                 <>
                   <Button variant="ghost" asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </Button>
                   <Button variant="outline" onClick={handleLogout}>Logout</Button>
                 </>
-              ) : (
-                <>
-                  <Button variant="ghost" asChild>
-                    <Link href="/login">Login</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link href="/start-with-us">Get Started</Link>
-                  </Button>
-                </>
-              ))}
+            )}
           </div>
 
         <div className="md:hidden">
@@ -199,28 +189,14 @@ export default function Header() {
                     )
                   })}
                    <div className="border-t pt-4 flex flex-col gap-4">
-                    {!isUserLoading &&
-                      (user ? (
+                    {!isUserLoading && user && (
                         <>
                           <SheetClose asChild>
                             <NavLink href="/dashboard" label="Dashboard" className="text-lg"/>
                           </SheetClose>
                            <Button variant="outline" onClick={handleLogout}>Logout</Button>
                         </>
-                      ) : (
-                        <>
-                          <SheetClose asChild>
-                             <Button variant="ghost" asChild>
-                               <Link href="/login">Login</Link>
-                             </Button>
-                          </SheetClose>
-                          <SheetClose asChild>
-                             <Button asChild>
-                                <Link href="/start-with-us">Get Started</Link>
-                             </Button>
-                          </SheetClose>
-                        </>
-                      ))}
+                      )}
                   </div>
                 </nav>
               </div>
