@@ -57,7 +57,7 @@ export default function Testimonials() {
             {testimonials.map((testimonial, index) => (
               <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                 <div className="p-1 h-full">
-                  <Card className="h-full flex flex-col justify-between shadow-sm hover:shadow-xl transition-shadow duration-300">
+                  <Card className="h-full flex flex-col justify-between shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                     <CardContent className="p-6 flex flex-col gap-6">
                       <Quote className="h-8 w-8 text-primary/50" />
                       <p className="text-muted-foreground text-base">

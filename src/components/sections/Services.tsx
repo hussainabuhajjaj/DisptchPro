@@ -38,7 +38,7 @@ export default function Services() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((service, index) => (
-            <Card key={index} className="flex flex-col items-start p-6 bg-card hover:shadow-lg transition-shadow duration-300">
+            <Card key={index} className="flex flex-col items-start p-6 bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
               <div className="mb-4">{service.icon}</div>
               <CardHeader className="p-0">
                 <CardTitle className="text-xl font-semibold mb-2">{service.title}</CardTitle>

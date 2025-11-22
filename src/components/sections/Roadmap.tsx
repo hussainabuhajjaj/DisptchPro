@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PhoneCall, CalendarCheck, Settings, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const roadmapSteps = [
   {
@@ -40,12 +41,21 @@ export default function Roadmap() {
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2 hidden md:block" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             {roadmapSteps.map((step, index) => (
-              <div key={index} className={`flex items-center gap-6 ${index % 2 === 1 ? "md:flex-row-reverse md:text-right" : "text-left"}`}>
+              <div key={index} className={cn(
+                "flex items-center gap-6",
+                index % 2 === 1 ? "md:flex-row-reverse md:text-right" : "text-left"
+              )}>
                 <div className="hidden md:block relative">
                    <div className="w-4 h-4 bg-primary rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" />
                 </div>
-                <Card className={`w-full hover:shadow-lg transition-shadow duration-300 ${index % 2 === 1 ? "md:text-right" : "md:text-left"}`}>
-                   <CardHeader className={`flex flex-col items-center gap-4 p-6 sm:flex-row ${index % 2 === 1 ? "md:flex-row-reverse" : ""}`}>
+                <Card className={cn(
+                  "w-full transition-all duration-300",
+                  "hover:shadow-xl hover:-translate-y-2"
+                )}>
+                   <CardHeader className={cn(
+                    "flex flex-col items-center gap-4 p-6 sm:flex-row",
+                     index % 2 === 1 ? "md:flex-row-reverse" : ""
+                   )}>
                     {step.icon}
                     <div className="flex-1">
                       <CardTitle className="text-xl font-semibold">{step.title}</CardTitle>

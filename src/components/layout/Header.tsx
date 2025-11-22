@@ -60,7 +60,7 @@ const NavLink = ({
     href={href}
     onClick={onClick}
     className={cn(
-      "text-sm font-medium text-foreground/80 transition-colors hover:text-foreground",
+      "text-sm font-medium text-foreground/80 transition-colors hover:text-primary",
       className
     )}
   >
@@ -79,7 +79,7 @@ const NavDropdown = ({
     <DropdownMenuTrigger asChild>
       <Button
         variant="ghost"
-        className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground hover:bg-transparent p-0"
+        className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary hover:bg-transparent p-0"
       >
         {label}
         <ChevronDown className="ml-1 h-4 w-4" />
