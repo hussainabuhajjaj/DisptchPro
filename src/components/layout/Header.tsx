@@ -19,26 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-
-// This is a placeholder for a real user session management hook
-const useUser = () => {
-  const [user, setUser] = React.useState<{ email: string } | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    // TODO: Replace with a real session check against your Laravel API
-    const timer = setTimeout(() => {
-       // To test the "logged out" state, set this to null
-      setUser({ email: 'carrier@example.com' });
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return { user, isLoading };
-};
-
 
 const mainNavLinks = [
   { href: "/#services", label: "Services" },
@@ -113,14 +93,6 @@ const NavDropdown = ({
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const { user, isLoading } = useUser();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    // TODO: Implement logout with Laravel API
-    console.log("Logging out...");
-    router.push("/");
-  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -155,20 +127,9 @@ export default function Header() {
         
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2">
-            {!isLoading && (
-              user ? (
-                <>
-                  <Button variant="ghost" asChild>
-                    <Link href="/dashboard">Dashboard</Link>
-                  </Button>
-                  <Button variant="outline" onClick={handleLogout}>Logout</Button>
-                </>
-              ) : (
-                 <Button asChild>
-                    <Link href="/login">Carrier Login</Link>
-                  </Button>
-              )
-            )}
+             <Button asChild>
+                <Link href="/login">Carrier Login</Link>
+              </Button>
           </div>
         </div>
 
@@ -211,22 +172,11 @@ export default function Header() {
                     )
                   })}
                    <div className="border-t pt-4 flex flex-col gap-4">
-                    {!isLoading && (
-                      user ? (
-                        <>
-                          <SheetClose asChild>
-                            <NavLink href="/dashboard" label="Dashboard" className="text-lg"/>
-                          </SheetClose>
-                           <Button variant="outline" onClick={handleLogout}>Logout</Button>
-                        </>
-                      ) : (
-                         <SheetClose asChild>
-                           <Button asChild className="w-full">
-                              <Link href="/login">Carrier Login</Link>
-                            </Button>
-                         </SheetClose>
-                      )
-                    )}
+                     <SheetClose asChild>
+                       <Button asChild className="w-full">
+                          <Link href="/login">Carrier Login</Link>
+                        </Button>
+                     </SheetClose>
                   </div>
                 </nav>
               </div>
