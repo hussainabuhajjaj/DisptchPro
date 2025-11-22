@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, Truck } from "lucide-react";
+import { ChevronDown, Menu, Truck } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import {
@@ -14,17 +14,33 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
-const navLinks = [
+const mainNavLinks = [
   { href: "/#services", label: "Services" },
-  { href: "/#why-us", label: "For Carriers" },
-  { href: "/#for-shippers", label: "For Shippers" },
-  { href: "/#for-brokers", label: "For Brokers" },
-  { href: "/#roadmap", label: "Roadmap" },
-  { href: "/#testimonials", label: "Testimonials" },
+  {
+    label: "Who We Serve",
+    items: [
+      { href: "/#why-us", label: "For Carriers" },
+      { href: "/#for-shippers", label: "For Shippers" },
+      { href: "/#for-brokers", label: "For Brokers" },
+    ],
+  },
+  {
+    label: "About",
+    items: [
+      { href: "/#roadmap", label: "Roadmap" },
+      { href: "/#testimonials", label: "Testimonials" },
+    ],
+  },
   { href: "/#faq", label: "FAQ" },
   { href: "/#book", label: "Book a Call" },
 ];
@@ -50,6 +66,33 @@ const NavLink = ({
   >
     {label}
   </Link>
+);
+
+const NavDropdown = ({
+  label,
+  items,
+}: {
+  label: string;
+  items: { href: string; label: string }[];
+}) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button
+        variant="ghost"
+        className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground hover:bg-transparent p-0"
+      >
+        {label}
+        <ChevronDown className="ml-1 h-4 w-4" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="start">
+      {items.map((item) => (
+        <DropdownMenuItem key={item.href} asChild>
+          <Link href={item.href}>{item.label}</Link>
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenuContent>
+  </DropdownMenu>
 );
 
 export default function Header() {
@@ -86,11 +129,17 @@ export default function Header() {
           <span className="font-bold text-lg text-foreground">H&A Dispatch</span>
         </Link>
 
-        <nav className="hidden items-center gap-4 md:flex">
-          {navLinks.map((link) => (
-            <NavLink key={link.href} {...link} />
-          ))}
-           <div className="flex items-center gap-2">
+        <nav className="hidden items-center gap-6 md:flex">
+          {mainNavLinks.map((link) =>
+            "items" in link ? (
+              <NavDropdown key={link.label} {...link} />
+            ) : (
+              <NavLink key={link.href} {...link} />
+            )
+          )}
+        </nav>
+        
+        <div className="hidden md:flex items-center gap-2 ml-4">
             {!isUserLoading &&
               (user ? (
                 <>
@@ -110,7 +159,6 @@ export default function Header() {
                 </>
               ))}
           </div>
-        </nav>
 
         <div className="md:hidden">
           <Sheet>
@@ -129,11 +177,27 @@ export default function Header() {
                    <span className="font-bold">H&A Dispatch</span>
                 </Link>
                 <nav className="flex flex-col gap-4">
-                  {navLinks.map((link) => (
+                  {mainNavLinks.map((link) => {
+                    if ("items" in link) {
+                      return (
+                        <div key={link.label}>
+                          <h3 className="text-lg font-semibold mb-2">{link.label}</h3>
+                          <div className="flex flex-col gap-3 pl-2 border-l">
+                            {link.items.map(item => (
+                               <SheetClose asChild key={item.href}>
+                                  <NavLink {...item} className="text-base" />
+                               </SheetClose>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    }
+                    return (
                      <SheetClose asChild key={link.href}>
                         <NavLink {...link} className="text-lg" />
                      </SheetClose>
-                  ))}
+                    )
+                  })}
                    <div className="border-t pt-4 flex flex-col gap-4">
                     {!isUserLoading &&
                       (user ? (
