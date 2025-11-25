@@ -19,8 +19,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { fetchSiteSettings, SiteSettings } from "@/lib/site-settings";
 
-const mainNavLinks = [
+type NavEntry = { href: string; label: string } | { label: string; items: { href: string; label: string }[] };
+
+const mainNavLinks: NavEntry[] = [
   { href: "/#services", label: "Services" },
   {
     label: "Who We Serve",
@@ -45,18 +49,21 @@ const NavLink = ({
   href,
   label,
   className,
+  active,
   onClick,
 }: {
   href: string;
   label: string;
   className?: string;
+  active?: boolean;
   onClick?: () => void;
 }) => (
   <Link
     href={href}
     onClick={onClick}
     className={cn(
-      "text-sm font-medium text-foreground/80 transition-colors hover:text-primary",
+      "text-sm font-medium transition-colors",
+      active ? "text-primary" : "text-foreground/80 hover:text-primary",
       className
     )}
   >
@@ -93,6 +100,8 @@ const NavDropdown = ({
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [settings, setSettings] = useState<SiteSettings>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -101,6 +110,43 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    fetchSiteSettings().then(setSettings).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const sectionIds = [
+      "services",
+      "why-us",
+      "for-shippers",
+      "for-brokers",
+      "kpis",
+      "load-board",
+      "faq",
+      "book",
+    ];
+    const observers: IntersectionObserver[] = [];
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActiveId(id);
+            }
+          });
+        },
+        { rootMargin: "-40% 0px -40% 0px", threshold: [0, 0.3, 0.6, 1] },
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+    return () => observers.forEach((obs) => obs.disconnect());
+  }, []);
+
+  const brand = settings.site_name || "H&A Dispatch";
 
   return (
     <header
@@ -112,7 +158,7 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <Truck className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg text-foreground">H&A Dispatch</span>
+          <span className="font-bold text-lg text-foreground">{brand}</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
@@ -120,7 +166,7 @@ export default function Header() {
             "items" in link ? (
               <NavDropdown key={link.label} {...link} />
             ) : (
-              <NavLink key={link.href} {...link} />
+              <NavLink key={link.href} {...link} active={link.href === `#${activeId}`} />
             )
           )}
         </nav>

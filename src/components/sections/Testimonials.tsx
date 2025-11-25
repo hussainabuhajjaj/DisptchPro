@@ -11,28 +11,48 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Quote } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
-const testimonials = [
+type Testimonial = {
+  quote: string;
+  name: string;
+  role?: string;
+  avatarId?: string;
+};
+
+type TestimonialsProps = {
+  title?: string;
+  subtitle?: string;
+  quotes?: Testimonial[];
+};
+
+const defaultTestimonials: Testimonial[] = [
   {
     quote:
       "H&A Dispatch transformed my operations. My revenue is up 30%, and I have more time to focus on driving. Their team is professional and always available.",
-    name: "John D., Owner-Operator",
+    name: "John D.",
+    role: "Owner-Operator",
     avatarId: "testimonial-avatar-1",
   },
   {
     quote:
       "Finding profitable loads used to be a nightmare. With H&A Dispatch, I get consistent, high-paying work without the stress. Highly recommended!",
-    name: "Maria S., Small Fleet Owner",
+    name: "Maria S.",
+    role: "Small Fleet Owner",
     avatarId: "testimonial-avatar-2",
   },
   {
     quote:
       "The paperwork handling alone is worth it. They are efficient, reliable, and truly understand the trucking business. A five-star service.",
-    name: "David L., Independent Trucker",
+    name: "David L.",
+    role: "Independent Trucker",
     avatarId: "testimonial-avatar-3",
   },
 ];
 
-export default function Testimonials() {
+export default function Testimonials({
+  title = "What Our Clients Say",
+  subtitle = "Real stories from truckers and fleet owners who trust our team.",
+  quotes = defaultTestimonials,
+}: TestimonialsProps) {
   const getImage = (id: string) => PlaceHolderImages.find((img) => img.id === id);
 
   return (
@@ -40,10 +60,10 @@ export default function Testimonials() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">
-            What Our Clients Say
+            {title}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Real stories from truckers and fleet owners who trust H&A Dispatch.
+            {subtitle}
           </p>
         </div>
         <Carousel
@@ -54,7 +74,7 @@ export default function Testimonials() {
           className="w-full max-w-4xl mx-auto"
         >
           <CarouselContent>
-            {testimonials.map((testimonial, index) => (
+            {quotes.map((testimonial, index) => (
               <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                 <div className="p-1 h-full">
                   <Card className="h-full flex flex-col justify-between shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
@@ -66,19 +86,21 @@ export default function Testimonials() {
                       <div className="flex items-center gap-4 pt-4 border-t">
                         <Avatar>
                           <AvatarImage
-                            src={getImage(testimonial.avatarId)?.imageUrl}
+                            src={testimonial.avatarId ? getImage(testimonial.avatarId)?.imageUrl : undefined}
                             alt={testimonial.name}
-                            data-ai-hint={getImage(testimonial.avatarId)?.imageHint}
+                            data-ai-hint={testimonial.avatarId ? getImage(testimonial.avatarId)?.imageHint : undefined}
                           />
                           <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-semibold text-sm text-foreground">
-                            {testimonial.name.split(',')[0]}
+                            {testimonial.name}
                           </p>
-                           <p className="text-xs text-muted-foreground">
-                            {testimonial.name.split(',')[1]}
-                           </p>
+                          {testimonial.role && (
+                            <p className="text-xs text-muted-foreground">
+                              {testimonial.role}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </CardContent>
