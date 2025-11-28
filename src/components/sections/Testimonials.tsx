@@ -22,6 +22,7 @@ type TestimonialsProps = {
   title?: string;
   subtitle?: string;
   quotes?: Testimonial[];
+  imageOverrides?: Record<string, string | undefined>;
 };
 
 const defaultTestimonials: Testimonial[] = [
@@ -52,8 +53,15 @@ export default function Testimonials({
   title = "What Our Clients Say",
   subtitle = "Real stories from truckers and fleet owners who trust our team.",
   quotes = defaultTestimonials,
+  imageOverrides,
 }: TestimonialsProps) {
-  const getImage = (id: string) => PlaceHolderImages.find((img) => img.id === id);
+  const getImage = (id: string) => {
+    const override = imageOverrides?.[id];
+    if (override) {
+      return { imageUrl: override };
+    }
+    return PlaceHolderImages.find((img) => img.id === id);
+  };
 
   return (
     <section id="testimonials" className="w-full py-16 md:py-24">

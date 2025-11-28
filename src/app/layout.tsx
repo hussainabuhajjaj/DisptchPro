@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -11,7 +11,12 @@ import { fetchLandingContent } from "@/lib/landing-content";
 import { loadThemeVars } from "@/lib/theme";
 import type { CSSProperties } from "react";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -57,7 +62,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body
-        className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}
+        className={cn("min-h-screen bg-background font-sans antialiased", poppins.variable)}
         style={themeVars as CSSProperties}
       >
         <AuthProvider>

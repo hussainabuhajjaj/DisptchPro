@@ -12,10 +12,21 @@ const FALLBACK_COLORS = {
 };
 
 export async function loadThemeVars() {
+  const vars: Record<string, string> = { ...FALLBACK_COLORS };
+
+  // If no API base is configured at build time, skip the request and use fallbacks.
+  const hasApiBase =
+    typeof process !== "undefined" &&
+    !!process.env.NEXT_PUBLIC_API_BASE_URL &&
+    process.env.NEXT_PUBLIC_API_BASE_URL.trim().length > 0;
+
+  if (!hasApiBase && typeof window === "undefined") {
+    return vars;
+  }
+
   try {
     const data = await apiClient.get<LandingResponse>("landing-page");
     const settings = data.settings || {};
-    const vars: Record<string, string> = { ...FALLBACK_COLORS };
 
     if (settings.theme_primary_color) vars["--color-primary"] = settings.theme_primary_color as string;
     if (settings.theme_secondary_color) vars["--color-secondary"] = settings.theme_secondary_color as string;
@@ -24,7 +35,9 @@ export async function loadThemeVars() {
 
     return vars;
   } catch (error) {
-    console.error("Failed to load theme vars", error);
-    return FALLBACK_COLORS;
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Failed to load theme vars; using defaults.", error);
+    }
+    return vars;
   }
 }

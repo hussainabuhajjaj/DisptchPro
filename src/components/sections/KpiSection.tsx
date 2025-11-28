@@ -24,19 +24,22 @@ export default function KpiSection({
   }
 
   return (
-    <section className="w-full py-16 md:py-20 bg-secondary/20">
+    <section id="kpis" className="w-full py-20 md:py-24 bg-[#0b2a45] text-white">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="mx-auto max-w-3xl text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">{title}</h2>
-          <p className="mt-4 text-lg text-muted-foreground">{subtitle}</p>
+        <div className="mx-auto max-w-3xl text-center mb-12">
+          <span className="text-sm font-semibold tracking-[0.08em] uppercase text-primary">
+            Metrics
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mt-2">{title}</h2>
+          <p className="mt-4 text-lg text-white/80">{subtitle}</p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {metrics.map((metric) => (
             <div
               key={metric.label}
-              className="rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:shadow-md"
+              className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-lg transition-all duration-200 hover:bg-white/10"
             >
-              <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
+              <p className="text-sm font-medium text-white/70">{metric.label}</p>
               <p className="mt-2 text-3xl font-bold">{metric.value}</p>
             </div>
           ))}

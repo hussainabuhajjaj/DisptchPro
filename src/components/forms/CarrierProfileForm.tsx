@@ -17,6 +17,7 @@ import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 const carrierInfoSchema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
@@ -55,6 +56,10 @@ const equipmentInfoSchema = z.object({
   flatbedTrailers: z.string().optional(),
   tankerTrailers: z.string().optional(),
   otherTrailerTypes: z.string().optional(),
+  trailerMix: z.array(z.object({
+    type: z.string(),
+    count: z.string(),
+  })).optional(),
   vanSizes: z.string().optional(),
   reeferSizes: z.string().optional(),
   flatbedSizes: z.string().optional(),
@@ -345,6 +350,13 @@ function EquipmentInfoForm() {
             <FormField name="equipmentInfo.otherTrailerTypes" render={({ field }) => (
                 <FormItem><FormLabel>Other Trailer Types</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
             )} />
+
+            <Separator />
+            <h3 className="text-lg font-medium">Trailer Mix (Type / Count)</h3>
+            <DynamicTable name="equipmentInfo.trailerMix" control={control} columns={[
+                { key: 'type', label: 'Type' },
+                { key: 'count', label: 'Count' },
+            ]} />
 
              <Separator />
             <h3 className="text-lg font-medium">Trailer Sizes</h3>
@@ -752,6 +764,7 @@ function PreviewForm({ onEdit }: { onEdit: (step: number) => void }) {
                 <PreviewTable title="Tractors" data={equipmentInfo.tractors} columns={[{ key: 'year', label: 'Year' }, { key: 'makeModel', label: 'Make/Model' }, { key: 'truckNum', label: 'Truck #' }, { key: 'vin', label: 'VIN #' }]} />
                 <PreviewTable title="Trailers" data={equipmentInfo.trailers} columns={[{ key: 'year', label: 'Year' }, { key: 'makeModel', label: 'Make/Model' }, { key: 'trailerNum', label: 'Trailer #' }, { key: 'vin', label: 'VIN #' }]} />
                 <PreviewTable title="Drivers" data={equipmentInfo.drivers} columns={[{ key: 'truckNum', label: 'Truck #' }, { key: 'trailerNum', label: 'Trailer #' }, { key: 'trailerType', label: 'Trailer Type' }, { key: 'maxWeight', label: 'Max Weight' }, { key: 'driverName', label: 'Driver Name' }, { key: 'driverCell', label: 'Driver Cell' }]} />
+                <PreviewTable title="Trailer Mix" data={equipmentInfo.trailerMix} columns={[{ key: 'type', label: 'Type' }, { key: 'count', label: 'Count' }]} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 mt-4">
                   <PreviewItem label="Drivers can make load decisions" value={equipmentInfo.driversCanMakeDecisions} />
                   <PreviewItem label="Drivers need copy of confirmation" value={equipmentInfo.driversNeedCopy} />
@@ -819,7 +832,7 @@ export default function CarrierProfileForm() {
       equipmentInfo: {
         numTrucks: '', companyDrivers: '', ownerOperators: '', teamDrivers: '',
         numTrailers: '', vanTrailers: '', reeferTrailers: '', flatbedTrailers: '',
-        tankerTrailers: '', otherTrailerTypes: '', vanSizes: '', reeferSizes: '',
+        tankerTrailers: '', otherTrailerTypes: '', trailerMix: [], vanSizes: '', reeferSizes: '',
         flatbedSizes: '', tankerSizes: '', tractors: [], trailers: [], drivers: [],
         driversCanMakeDecisions: undefined, driversNeedCopy: undefined,
         equipmentDescription: '',
@@ -842,36 +855,53 @@ export default function CarrierProfileForm() {
   });
 
   const { handleSubmit, trigger, formState } = methods;
+  const { toast } = useToast();
 
   const processForm = async (data: FullFormValues) => {
     setIsSubmitting(true);
     console.log('Form data submitted, preparing for Laravel API:', data);
 
-    // TODO: Implement the API call to your Laravel backend
-    // Example:
-    // try {
-    //   const response = await fetch('/api/carrier-profile', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(data),
-    //   });
-    //   if (!response.ok) {
-    //     throw new Error('Network response was not ok');
-    //   }
-    //   const result = await response.json();
-    //   console.log("Profile successfully saved via Laravel API:", result);
-    //   setFormCompleted(true);
-    // } catch (error) {
-    //   console.error("Error saving carrier profile via Laravel API: ", error);
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    const apiBaseUrl =
+      process.env.NODE_ENV === 'production'
+        ? process.env.NEXT_PUBLIC_API_BASE_URL
+        : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
-    // Simulating API call for now
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log("Simulated API call complete.");
-    setFormCompleted(true);
-    setIsSubmitting(false);
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/carrier-profile`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        const message = errorBody?.message || 'Unable to save your profile. Please try again.';
+        throw new Error(message);
+      }
+
+      toast({
+        title: 'Profile submitted',
+        description: 'Thanks! We received your carrier profile.',
+      });
+
+      setFormCompleted(true);
+    } catch (error: any) {
+      console.error('Error saving carrier profile via Laravel API: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Save failed',
+        description: error?.message || 'Something went wrong. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const nextStep = async () => {

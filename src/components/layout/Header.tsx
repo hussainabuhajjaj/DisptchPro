@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, Menu, Truck, User } from "lucide-react";
+import { ChevronDown, Mail, Menu, Phone, Truck } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -105,7 +105,7 @@ export default function Header() {
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 12);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -147,87 +147,117 @@ export default function Header() {
   }, []);
 
   const brand = settings.site_name || "H&A Dispatch";
+  const contactPhone = settings.contact_phone || "+1 (234) 567-890";
+  const contactEmail = settings.contact_email || "contact@hadispatch.com";
+  const supportText = settings.topbar_text || "24/7 Dispatch Support";
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full border-b border-transparent transition-all duration-300",
-        isScrolled ? "border-border/60 bg-background/80 backdrop-blur-lg" : ""
-      )}
-    >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <Truck className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg text-foreground">{brand}</span>
-        </Link>
-
-        <nav className="hidden items-center gap-6 md:flex">
-          {mainNavLinks.map((link) =>
-            "items" in link ? (
-              <NavDropdown key={link.label} {...link} />
-            ) : (
-              <NavLink key={link.href} {...link} active={link.href === `#${activeId}`} />
-            )
-          )}
-        </nav>
-        
-        <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-2">
-             <Button asChild>
-                <Link href="/login">Carrier Login</Link>
-              </Button>
+    <header className="sticky top-0 z-50 w-full">
+      <div className="hidden md:block bg-[#0f3750] text-white">
+        <div className="container mx-auto flex h-9 items-center justify-between px-4 md:px-6 text-sm">
+          <span className="font-semibold tracking-tight">{supportText}</span>
+          <div className="flex items-center gap-5">
+            <a href={`tel:${contactPhone}`} className="flex items-center gap-1 hover:underline">
+              <Phone className="h-4 w-4" />
+              <span>{contactPhone}</span>
+            </a>
+            <a href={`mailto:${contactEmail}`} className="flex items-center gap-1 hover:underline">
+              <Mail className="h-4 w-4" />
+              <span>{contactEmail}</span>
+            </a>
           </div>
         </div>
+      </div>
+      <div
+        className={cn(
+          "border-b border-transparent transition-all duration-300 bg-background/90 backdrop-blur-xl",
+          isScrolled ? "border-border/80 shadow-sm" : ""
+        )}
+      >
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <Truck className="h-6 w-6 text-primary" />
+            <span className="font-bold text-lg text-foreground">{brand}</span>
+          </Link>
 
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-                <SheetTitle className="sr-only">Menu</SheetTitle>
-                <SheetDescription className="sr-only">Main navigation menu for H&A Dispatch</SheetDescription>
-              <div className="flex flex-col gap-6 p-6">
-                <Link href="/" className="flex items-center gap-2">
-                   <Truck className="h-6 w-6 text-primary" />
-                   <span className="font-bold">H&A Dispatch</span>
-                </Link>
-                <nav className="flex flex-col gap-4">
-                  {mainNavLinks.map((link) => {
-                    if ("items" in link) {
-                      return (
-                        <div key={link.label}>
-                          <h3 className="text-lg font-semibold mb-2">{link.label}</h3>
-                          <div className="flex flex-col gap-3 pl-2 border-l">
-                            {link.items.map(item => (
-                               <SheetClose asChild key={item.href}>
-                                  <NavLink {...item} className="text-base" />
-                               </SheetClose>
-                            ))}
+          <nav className="hidden items-center gap-6 md:flex">
+            {mainNavLinks.map((link) =>
+              "items" in link ? (
+                <NavDropdown key={link.label} {...link} />
+              ) : (
+                <NavLink
+                  key={link.href}
+                  {...link}
+                  active={activeId ? link.href.endsWith(`#${activeId}`) : false}
+                />
+              )
+            )}
+          </nav>
+
+          <div className="hidden md:flex items-center gap-3">
+            <Button asChild variant="outline" className="border-primary/40 text-foreground hover:text-primary">
+              <Link href="/login">Carrier Login</Link>
+            </Button>
+            <Button asChild className="shadow-md">
+              <Link href="/#book">Book a Call</Link>
+            </Button>
+          </div>
+
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle navigation menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                  <SheetTitle className="sr-only">Menu</SheetTitle>
+                  <SheetDescription className="sr-only">Main navigation menu for H&A Dispatch</SheetDescription>
+                <div className="flex flex-col gap-6 p-6">
+                  <Link href="/" className="flex items-center gap-2">
+                     <Truck className="h-6 w-6 text-primary" />
+                     <span className="font-bold">H&A Dispatch</span>
+                  </Link>
+                  <nav className="flex flex-col gap-4">
+                    {mainNavLinks.map((link) => {
+                      if ("items" in link) {
+                        return (
+                          <div key={link.label}>
+                            <h3 className="text-lg font-semibold mb-2">{link.label}</h3>
+                            <div className="flex flex-col gap-3 pl-2 border-l">
+                              {link.items.map(item => (
+                                 <SheetClose asChild key={item.href}>
+                                    <NavLink {...item} className="text-base" />
+                                 </SheetClose>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )
+                      }
+                      return (
+                       <SheetClose asChild key={link.href}>
+                          <NavLink {...link} className="text-lg" />
+                       </SheetClose>
                       )
-                    }
-                    return (
-                     <SheetClose asChild key={link.href}>
-                        <NavLink {...link} className="text-lg" />
-                     </SheetClose>
-                    )
-                  })}
-                   <div className="border-t pt-4 flex flex-col gap-4">
-                     <SheetClose asChild>
-                       <Button asChild className="w-full">
-                          <Link href="/login">Carrier Login</Link>
-                        </Button>
-                     </SheetClose>
-                  </div>
-                </nav>
-              </div>
-            </SheetContent>
-          </Sheet>
+                    })}
+                     <div className="border-t pt-4 flex flex-col gap-4">
+                       <SheetClose asChild>
+                         <Button asChild className="w-full">
+                            <Link href="/#book">Book a Call</Link>
+                          </Button>
+                       </SheetClose>
+                       <SheetClose asChild>
+                         <Button asChild variant="outline" className="w-full border-primary/40 text-foreground">
+                            <Link href="/login">Carrier Login</Link>
+                         </Button>
+                       </SheetClose>
+                    </div>
+                  </nav>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>

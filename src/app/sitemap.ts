@@ -1,8 +1,7 @@
 import { type MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // TODO: Replace with your actual domain
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002';
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002').replace(/\/$/, '');
 
   const staticPages = [
     {

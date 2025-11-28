@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Database\Seeders\LandingSectionSeeder;
+use Database\Seeders\MediaSeeder;
+use Database\Seeders\SettingsSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -19,6 +21,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
         $this->call([
             LandingSectionSeeder::class,
+            MediaSeeder::class,
+            SettingsSeeder::class,
         ]);
     }
 }

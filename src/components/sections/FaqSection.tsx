@@ -37,19 +37,24 @@ export default function FaqSection({
   const list = faqs?.length ? faqs : defaultFaqs;
 
   return (
-    <section id="faq" className="w-full py-16 md:py-24 bg-secondary/30">
+    <section id="faq" className="w-full py-20 md:py-24 bg-[#eaf3fb]">
       <div className="container mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">{title}</h2>
+          <span className="text-sm font-semibold tracking-[0.08em] uppercase text-primary">
+            Support
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mt-2">{title}</h2>
           <p className="mt-4 text-lg text-muted-foreground">{subtitle}</p>
         </div>
-        <Card className="max-w-3xl mx-auto shadow-lg">
+        <Card className="max-w-3xl mx-auto shadow-xl rounded-2xl border border-muted/60">
           <CardContent className="p-6">
             <Accordion type="single" collapsible className="w-full">
               {list.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
                   <AccordionTrigger className="text-lg text-left">{faq.question}</AccordionTrigger>
-                  <AccordionContent className="text-base text-muted-foreground">{faq.answer}</AccordionContent>
+                  <AccordionContent className="text-base text-muted-foreground pl-4 border-l border-primary/30">
+                    {faq.answer}
+                  </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>

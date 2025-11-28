@@ -14,6 +14,7 @@ return [
         App\Settings\GeneralSettings::class,
         App\Settings\SeoSettings::class,
         App\Settings\FooterSettings::class,
+        App\Settings\MediaSettings::class,
     ],
 
     /*

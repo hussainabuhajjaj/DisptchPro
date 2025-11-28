@@ -6,6 +6,7 @@ type WhyUsProps = {
   title?: string;
   subtitle?: string;
   bullets?: string[];
+  imageUrl?: string;
 };
 
 const defaultBullets = [
@@ -20,8 +21,11 @@ export default function WhyChooseUs({
   title = "Why Partner with H&A Dispatch?",
   subtitle = "We are more than just a dispatch service; we are your strategic partner in success. We focus on your profitability and efficiency so you can focus on driving.",
   bullets = defaultBullets,
+  imageUrl,
 }: WhyUsProps) {
-  const whyChooseUsImage = PlaceHolderImages.find((img) => img.id === "why-choose-us");
+  const whyChooseUsImage = imageUrl
+    ? { imageUrl, description: "Why choose us" }
+    : PlaceHolderImages.find((img) => img.id === "why-choose-us");
   return (
     <section id="why-us" className="w-full py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6">
@@ -47,6 +51,7 @@ export default function WhyChooseUs({
                 className="object-cover"
                 data-ai-hint={whyChooseUsImage.imageHint}
                 sizes="(max-width: 768px) 100vw, 50vw"
+                unoptimized
               />
             )}
             <div className="absolute inset-0 bg-black/20" />

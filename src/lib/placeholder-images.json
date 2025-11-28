@@ -2,45 +2,45 @@
   "placeholderImages": [
     {
       "id": "hero-background",
-      "description": "A long-exposure shot of a truck driving on a highway at dusk.",
-      "imageUrl": "https://images.unsplash.com/photo-1667489012071-32b7dcd84f8a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx0cnVjayUyMGhpZ2h3YXl8ZW58MHx8fHwxNzYzMjE4OTcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "truck highway"
+      "description": "A long-haul semi truck driving on an open highway at sunset with motion blur lights.",
+      "imageUrl": "https://images.unsplash.com/photo-1502877828070-33b167ad6860?auto=format&fit=crop&w=1600&q=80",
+      "imageHint": "semi truck highway sunset"
     },
     {
       "id": "testimonial-avatar-1",
       "description": "Portrait of a smiling man, a satisfied client.",
-      "imageUrl": "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjMxNDEzMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=400&q=80",
       "imageHint": "person portrait"
     },
     {
       "id": "testimonial-avatar-2",
       "description": "Portrait of a woman, a happy customer.",
-      "imageUrl": "https://images.unsplash.com/photo-1580489944761-15a19d654956?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc2MzEwMjI2Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
       "imageHint": "woman portrait"
     },
     {
       "id": "testimonial-avatar-3",
       "description": "Portrait of another satisfied male client.",
-      "imageUrl": "https://images.unsplash.com/photo-1621624666561-84d0107001dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtYW4lMjBzbWlsaW5nfGVufDB8fHx8MTc2MzE1OTMzNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1621624666561-84d0107001dc?auto=format&fit=crop&w=400&q=80",
       "imageHint": "man smiling"
     },
     {
       "id": "why-choose-us",
-      "description": "A logistics control center with multiple screens showing maps and data.",
-      "imageUrl": "https://images.unsplash.com/photo-1616445514247-c008b6a3782d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMzczNDV8MHwxfHNlYXJjaHwxfHxsb2dpc3RpY3MlMjBjb250cm9sJTIwcm9vbXxlbnwwfHx8fDE2NzM0MjYwMjV8MA&ixlib=rb-4.0.3&q=80&w=1080",
-      "imageHint": "logistics control"
+      "description": "A fleet of container trucks lined up at a port with cranes and stacked containers.",
+      "imageUrl": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+      "imageHint": "container trucks port"
     },
     {
       "id": "for-shippers",
-      "description": "A large warehouse with stacks of boxes and workers moving them with forklifts, representing shipping and logistics.",
-      "imageUrl": "https://images.unsplash.com/photo-1644079446600-219068676743?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3YXJlaG91c2UlMjBsb2dpc3RpY3N8ZW58MHx8fHwxNzYzNzg1Mzk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "warehouse logistics"
+      "description": "A modern logistics warehouse with a trailer being loaded by workers and forklifts.",
+      "imageUrl": "https://images.unsplash.com/photo-1506617420156-8e4536971650?auto=format&fit=crop&w=1600&q=80",
+      "imageHint": "truck loading warehouse"
     },
     {
       "id": "for-brokers",
-      "description": "Two professionals shaking hands in a modern office, representing a successful business partnership for brokers.",
-      "imageUrl": "https://images.unsplash.com/photo-1600880292089-90a7e086ee0c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxidXNpbmVzcyUyMHBhcnRuZXJzaGlwfGVufDB8fHx8MTc2MzcxNjQ3NHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "business partnership"
+      "description": "A driver and a manager shaking hands beside a semi truck, symbolizing partnership.",
+      "imageUrl": "https://images.unsplash.com/photo-1541417904950-b855846fe074?auto=format&fit=crop&w=1600&q=80",
+      "imageHint": "truck handshake partnership"
     }
   ]
 }

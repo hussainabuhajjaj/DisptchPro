@@ -27,9 +27,12 @@ const roadmapSteps = [
 
 export default function Roadmap() {
   return (
-    <section id="roadmap" className="w-full py-16 md:py-24">
+    <section id="roadmap" className="w-full py-20 md:py-24 bg-white">
       <div className="container mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
+          <span className="text-sm font-semibold tracking-[0.08em] uppercase text-primary">
+            How it works
+          </span>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">
             Your Roadmap to Success
           </h2>
@@ -37,38 +40,28 @@ export default function Roadmap() {
             A simple, four-step process to get you on the road to higher profits and less stress.
           </p>
         </div>
-        <div className="relative">
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2 hidden md:block" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-            {roadmapSteps.map((step, index) => (
-              <div key={index} className={cn(
-                "flex items-center gap-6",
-                index % 2 === 1 ? "md:flex-row-reverse md:text-right" : "text-left"
-              )}>
-                <div className="hidden md:block relative">
-                   <div className="w-4 h-4 bg-primary rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" />
-                   <div className="w-4 h-4 bg-primary rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 animate-ping" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {roadmapSteps.map((step, index) => (
+            <Card
+              key={index}
+              className="w-full h-full rounded-2xl border border-muted/60 bg-card shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+            >
+              <CardHeader className="flex flex-col gap-4 p-6">
+                <div className="inline-flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary font-bold">
+                    {index + 1}
+                  </span>
+                  {step.icon}
                 </div>
-                <Card className={cn(
-                  "w-full transition-all duration-300",
-                  "hover:shadow-xl hover:-translate-y-2"
-                )}>
-                   <CardHeader className={cn(
-                    "flex flex-col items-center gap-4 p-6 sm:flex-row",
-                     index % 2 === 1 ? "md:flex-row-reverse" : ""
-                   )}>
-                    {step.icon}
-                    <div className="flex-1">
-                      <CardTitle className="text-xl font-semibold">{step.title}</CardTitle>
-                      <CardDescription className="mt-2 text-base">
-                        {step.description}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                </Card>
-              </div>
-            ))}
-          </div>
+                <div className="flex-1">
+                  <CardTitle className="text-xl font-semibold">{step.title}</CardTitle>
+                  <CardDescription className="mt-2 text-base">
+                    {step.description}
+                  </CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
         </div>
       </div>
     </section>

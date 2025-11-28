@@ -22,10 +22,32 @@ export default async function Home() {
   // Load landing content to align metadata/theming and future rendering
   const [landing] = await Promise.all([fetchLandingContent(), fetchSiteSettings()]);
 
+  const landingData = landing ?? { sections: [], settings: {}, media: {} as any };
+
+  if (process.env.NODE_ENV === "development") {
+    // Debug: inspect API payload on the server side
+    console.log("[landing] sections count:", (landingData.sections ?? []).length);
+    console.log("[landing] sections:", (landingData.sections ?? []).map((s) => [s.content,s.slug,s.title,s.position,s.is_active]));
+    console.log("[landing] media:", landingData.media);
+    console.log("[landing] settings keys:", Object.keys((landingData as any)?.settings ?? {}));
+  }
+
   const sectionsBySlug: Record<string, LandingSection> = {};
-  landing.sections.forEach((s) => {
+  (landingData.sections ?? []).forEach((s) => {
     sectionsBySlug[s.slug] = s;
   });
+
+  const settings = (landingData as any)?.settings || {};
+  const media = (landingData as any)?.media || {};
+  const mediaImages = {
+    hero: media.hero_image_url as string | undefined,
+    whyChooseUs: media.why_choose_us_image_url as string | undefined,
+    forShippers: media.for_shippers_image_url as string | undefined,
+    forBrokers: media.for_brokers_image_url as string | undefined,
+    testimonialAvatar1: media.testimonial_avatar_1_url as string | undefined,
+    testimonialAvatar2: media.testimonial_avatar_2_url as string | undefined,
+    testimonialAvatar3: media.testimonial_avatar_3_url as string | undefined,
+  };
 
   const heroContent = sectionsBySlug["hero"]?.content || {};
   const featuresContent = sectionsBySlug["features"]?.content || {};
@@ -52,6 +74,56 @@ export default async function Home() {
     return mapped.length ? mapped : undefined;
   };
 
+  const servicesItems =
+    Array.isArray((featuresContent as any)?.items) && (featuresContent as any).items.length
+      ? (featuresContent as any).items.map((item: any) => ({
+          title: item?.title ?? "",
+          description: item?.description ?? "",
+        }))
+      : undefined;
+
+  const whyUsBullets = normalizeBullets((whyUsContent as any)?.items ?? (whyUsContent as any)?.bullets);
+
+  const forShippersBullets = normalizeBullets((forShippersContent as any)?.bullets);
+  const forBrokersBullets = normalizeBullets((forBrokersContent as any)?.bullets);
+
+  const kpiMetrics =
+    Array.isArray((kpiContent as any)?.metrics) && (kpiContent as any).metrics.length
+      ? (kpiContent as any).metrics.map((m: any) => ({
+          label: m?.label ?? "",
+          value: m?.value ?? "",
+        }))
+      : undefined;
+
+  const loadBoardLoads =
+    Array.isArray((loadBoardContent as any)?.loads) && (loadBoardContent as any).loads.length
+      ? (loadBoardContent as any).loads.map((l: any) => ({
+          origin: l?.origin ?? "",
+          destination: l?.destination ?? "",
+          equipment: l?.equipment ?? "",
+          rate: l?.rate ?? l?.rpm ?? "",
+          pickup: l?.pickup ?? "",
+        }))
+      : undefined;
+
+  const testimonialsQuotes =
+    Array.isArray((testimonialsContent as any)?.quotes) && (testimonialsContent as any).quotes.length
+      ? (testimonialsContent as any).quotes.map((q: any) => ({
+          name: q?.name ?? "",
+          text: q?.text ?? "",
+          role: q?.role ?? "",
+        }))
+      : undefined;
+
+  const resourcesList =
+    Array.isArray((resourcesContent as any)?.resources) && (resourcesContent as any).resources.length
+      ? (resourcesContent as any).resources.map((r: any) => ({
+          title: r?.title ?? "",
+          description: r?.description ?? "",
+          href: r?.href ?? "#",
+        }))
+      : undefined;
+
   return (
     <div className="flex flex-col min-h-screen">
       <Hero
@@ -62,43 +134,52 @@ export default async function Home() {
         ctaPrimaryHref="#book"
         ctaSecondaryLabel={(heroContent as any)?.cta_secondary as string}
         ctaSecondaryHref="#services"
+        imageUrl={mediaImages.hero}
       />
       <Services
         title={(sectionsBySlug["features"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["features"]?.subtitle as string) || undefined}
-        items={((featuresContent as any)?.items as { title: string; description: string }[]) || undefined}
+        items={servicesItems}
       />
       <WhyChooseUs
         title={(sectionsBySlug["why-us"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["why-us"]?.subtitle as string) || undefined}
-        bullets={normalizeBullets((whyUsContent as any)?.items)}
+        bullets={whyUsBullets}
+        imageUrl={mediaImages.whyChooseUs}
       />
       <ForShippers
         title={(sectionsBySlug["for-shippers"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["for-shippers"]?.subtitle as string) || undefined}
-        bullets={normalizeBullets((forShippersContent as any)?.bullets)}
+        bullets={forShippersBullets}
+        imageUrl={mediaImages.forShippers}
       />
       <ForBrokers
         title={(sectionsBySlug["for-brokers"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["for-brokers"]?.subtitle as string) || undefined}
-        bullets={normalizeBullets((forBrokersContent as any)?.bullets)}
+        bullets={forBrokersBullets}
+        imageUrl={mediaImages.forBrokers}
       />
       <ProfitCalculator />
       <Roadmap />
       <Testimonials
         title={(sectionsBySlug["testimonials"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["testimonials"]?.subtitle as string) || undefined}
-        quotes={((testimonialsContent as any)?.quotes as any[]) || undefined}
+        quotes={testimonialsQuotes}
+        imageOverrides={{
+          "testimonial-avatar-1": mediaImages.testimonialAvatar1,
+          "testimonial-avatar-2": mediaImages.testimonialAvatar2,
+          "testimonial-avatar-3": mediaImages.testimonialAvatar3,
+        }}
       />
       <KpiSection
         title={(sectionsBySlug["kpis"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["kpis"]?.subtitle as string) || undefined}
-        metrics={((kpiContent as any)?.metrics as any[]) || undefined}
+        metrics={kpiMetrics}
       />
       <LoadBoardPreview
         title={(sectionsBySlug["load-board"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["load-board"]?.subtitle as string) || undefined}
-        loads={((loadBoardContent as any)?.loads as any[]) || undefined}
+        loads={loadBoardLoads}
       />
       <FaqSection
         title={(sectionsBySlug["faq"]?.title as string) || undefined}
@@ -108,7 +189,7 @@ export default async function Home() {
       <ResourcesSection
         title={(sectionsBySlug["resources"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["resources"]?.subtitle as string) || undefined}
-        resources={((resourcesContent as any)?.resources as any[]) || undefined}
+        resources={resourcesList}
       />
       <CtaSection
         title={(sectionsBySlug["cta"]?.title as string) || undefined}

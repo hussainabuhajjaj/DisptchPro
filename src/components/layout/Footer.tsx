@@ -73,11 +73,11 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-secondary/50">
-      <div className="border-b bg-background/80">
-        <div className="container mx-auto px-4 py-3 md:px-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="bg-[#0b2a45] text-white">
+      <div className="border-b border-white/10 bg-[#0f3750]">
+        <div className="container mx-auto px-4 py-3 md:px-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
           {compliance.map(({ label, Icon }) => (
-            <div key={label} className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div key={label} className="flex items-center gap-2 text-white/80">
               <Icon className="h-4 w-4 text-primary" />
               <span>{label}</span>
             </div>
@@ -89,25 +89,25 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2">
               <Truck className="h-7 w-7 text-primary" />
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-xl font-bold">
                 {brand}
               </span>
             </Link>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-white/70 text-sm leading-6">
               {settings.site_description ||
                 "Optimizing logistics for owner-operators and small fleets."}
             </p>
           </div>
 
           <div className="md:col-span-2">
-            <h3 className="text-lg font-semibold text-foreground mb-6">
+            <h3 className="text-lg font-semibold mb-6">
               Get in Touch
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {contactMethods.map(({ Icon, label, href, value }) => (
                 <div key={label} className="flex flex-col gap-2">
-                  <p className="text-sm font-medium text-muted-foreground">{label}</p>
-                   <Button variant="link" asChild className="p-0 h-auto justify-start text-foreground">
+                  <p className="text-sm font-medium text-white/60">{label}</p>
+                   <Button variant="link" asChild className="p-0 h-auto justify-start text-white hover:text-primary">
                      <a href={href} className="flex items-center gap-2">
                         <Icon className="h-4 w-4 text-primary" />
                         <span>{value}</span>
@@ -119,8 +119,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground text-center sm:text-left">
+        <div className="mt-12 border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-white/60 text-center sm:text-left">
             {footerText}
           </p>
           <div className="flex flex-wrap gap-3">
@@ -130,13 +130,13 @@ export default function Footer() {
                   key={link.url}
                   variant="link"
                   asChild
-                  className="p-0 h-auto text-muted-foreground"
+                  className="p-0 h-auto text-white/70 hover:text-primary"
                 >
                   <Link href={link.url}>{link.label}</Link>
                 </Button>
               ))
             ) : (
-              <Button variant="link" asChild className="p-0 h-auto text-muted-foreground">
+              <Button variant="link" asChild className="p-0 h-auto text-white/70 hover:text-primary">
                 <Link href="/api/docs" className="flex items-center gap-2">
                   <FileCode className="h-4 w-4" />
                   <span>API Docs</span>

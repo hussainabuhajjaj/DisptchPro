@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarrierDraftController;
+use App\Http\Controllers\Api\CarrierProfileController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\LandingContentController;
@@ -41,3 +42,7 @@ Route::post('bookings', [BookingController::class, 'store'])
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('bookings', [BookingController::class, 'index']);
 });
+
+// Carrier profile submission (public; ties to authenticated user if present)
+Route::post('carrier-profile', [CarrierProfileController::class, 'store'])
+    ->middleware('throttle:20,1');

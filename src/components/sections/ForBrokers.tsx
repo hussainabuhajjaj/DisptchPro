@@ -11,6 +11,7 @@ type ForBrokersProps = {
   bullets?: string[];
   ctaLabel?: string;
   ctaHref?: string;
+  imageUrl?: string;
 };
 
 const defaultBullets = [
@@ -27,13 +28,16 @@ export default function ForBrokers({
   bullets = defaultBullets,
   ctaLabel = "Partner With Us",
   ctaHref = "#book",
+  imageUrl,
 }: ForBrokersProps) {
-  const forBrokersImage = PlaceHolderImages.find((img) => img.id === "for-brokers");
+  const forBrokersImage = imageUrl
+    ? { imageUrl, description: "For brokers", imageHint: "brokers" }
+    : PlaceHolderImages.find((img) => img.id === "for-brokers");
   return (
-    <section id="for-brokers" className="w-full py-16 md:py-24">
+    <section id="for-brokers" className="w-full py-20 md:py-24 bg-[#eaf3fb]">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-           <div className="relative h-80 w-full rounded-lg overflow-hidden shadow-lg order-last md:order-first">
+           <div className="relative h-80 w-full rounded-2xl overflow-hidden shadow-xl order-last md:order-first">
              {forBrokersImage && (
                 <Image
                     src={forBrokersImage.imageUrl}
@@ -42,11 +46,15 @@ export default function ForBrokers({
                     className="object-cover"
                     data-ai-hint={forBrokersImage.imageHint}
                     sizes="(max-width: 768px) 100vw, 50vw"
+                    unoptimized
                 />
             )}
             <div className="absolute inset-0 bg-black/20" />
           </div>
           <div className="flex flex-col gap-6">
+            <span className="text-sm font-semibold tracking-[0.08em] uppercase text-primary">
+              For brokers
+            </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">
               {title}
             </h2>
@@ -63,7 +71,7 @@ export default function ForBrokers({
             </ul>
              <div className="mt-4">
               {ctaLabel && (
-                <Button asChild size="lg" className="font-semibold">
+                <Button asChild size="lg" className="font-semibold shadow-md">
                   <Link href={ctaHref}>
                     {ctaLabel} <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
