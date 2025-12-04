@@ -13,9 +13,12 @@ class DocumentController extends Controller
 {
     public function store(Request $request, $draftId)
     {
-        $draft = CarrierDraft::where('id', $draftId)
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $draft = CarrierDraft::where(function ($query) use ($draftId) {
+            $query->where('reference_code', $draftId);
+            if (is_numeric($draftId)) {
+                $query->orWhere('id', $draftId);
+            }
+        })->firstOrFail();
 
         $validated = $request->validate([
             'type' => ['required', 'string', 'in:w9,coi,insurance,factoringNoa'],
@@ -44,9 +47,12 @@ class DocumentController extends Controller
 
     public function index(Request $request, $draftId)
     {
-        $draft = CarrierDraft::where('id', $draftId)
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $draft = CarrierDraft::where(function ($query) use ($draftId) {
+            $query->where('reference_code', $draftId);
+            if (is_numeric($draftId)) {
+                $query->orWhere('id', $draftId);
+            }
+        })->firstOrFail();
 
         $base = collect([
             'w9' => ['status' => 'missing', 'reviewerNote' => null, 'fileName' => null],

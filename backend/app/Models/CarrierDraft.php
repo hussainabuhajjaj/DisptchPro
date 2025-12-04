@@ -11,6 +11,7 @@ class CarrierDraft extends Model
 
     protected $fillable = [
         'user_id',
+        'reference_code',
         'data',
         'status',
         'consent',

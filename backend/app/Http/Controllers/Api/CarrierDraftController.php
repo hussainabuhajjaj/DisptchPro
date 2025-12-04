@@ -6,25 +6,33 @@ use App\Http\Controllers\Controller;
 use App\Models\CarrierDraft;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CarrierDraftController extends Controller
 {
     public function store(Request $request)
     {
         $data = $request->validate([
-            'draftId' => ['nullable', 'integer', 'exists:carrier_drafts,id'],
+            'draftId' => ['nullable', 'string'],
             'data' => ['required', 'array'],
         ]);
 
         $draft = DB::transaction(function () use ($request, $data) {
             if (!empty($data['draftId'])) {
-                $draft = CarrierDraft::where('id', $data['draftId'])
-                    ->where('user_id', $request->user()->id)
-                    ->firstOrFail();
-                $draft->update(['data' => $data['data']]);
+                $draft = CarrierDraft::where(function ($query) use ($data) {
+                    $query->where('reference_code', $data['draftId']);
+                    if (is_numeric($data['draftId'])) {
+                        $query->orWhere('id', $data['draftId']);
+                    }
+                })->firstOrFail();
+                $draft->update([
+                    'data' => $data['data'],
+                    'user_id' => optional($request->user())->id,
+                ]);
             } else {
                 $draft = CarrierDraft::create([
-                    'user_id' => $request->user()->id,
+                    'user_id' => optional($request->user())->id,
+                    'reference_code' => $this->generateReferenceCode(),
                     'data' => $data['data'],
                     'status' => 'draft',
                 ]);
@@ -33,7 +41,7 @@ class CarrierDraftController extends Controller
         });
 
         return response()->json([
-            'draftId' => $draft->id,
+            'draftId' => $draft->reference_code,
             'updatedAt' => $draft->updated_at,
             'data' => $draft->data,
         ]);
@@ -41,13 +49,17 @@ class CarrierDraftController extends Controller
 
     public function show(Request $request, $id)
     {
-        $draft = CarrierDraft::where('id', $id)
-            ->where('user_id', $request->user()->id)
+        $draft = CarrierDraft::where(function ($query) use ($id) {
+            $query->where('reference_code', $id);
+            if (is_numeric($id)) {
+                $query->orWhere('id', $id);
+            }
+        })
             ->with('documents')
             ->firstOrFail();
 
         return response()->json([
-            'draftId' => $draft->id,
+            'draftId' => $draft->reference_code,
             'updatedAt' => $draft->updated_at,
             'data' => $draft->data,
             'documents' => $draft->documents
@@ -67,9 +79,12 @@ class CarrierDraftController extends Controller
             'consent.signedAt' => ['required', 'date'],
         ]);
 
-        $draft = CarrierDraft::where('id', $id)
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $draft = CarrierDraft::where(function ($query) use ($id) {
+            $query->where('reference_code', $id);
+            if (is_numeric($id)) {
+                $query->orWhere('id', $id);
+            }
+        })->firstOrFail();
 
         $draft->update([
             'consent' => $data['consent'],
@@ -77,5 +92,14 @@ class CarrierDraftController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    protected function generateReferenceCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(10));
+        } while (CarrierDraft::where('reference_code', $code)->exists());
+
+        return $code;
     }
 }

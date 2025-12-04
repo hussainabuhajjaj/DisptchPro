@@ -4,15 +4,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CarrierOnboardingWizard from "@/components/forms/carrier-wizard/CarrierOnboardingWizard";
-import { getDraftToken, clearDraftToken } from "@/lib/carrier-draft-storage";
+import { getDraftToken, clearDraftToken, storeDraftToken } from "@/lib/carrier-draft-storage";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function StartWithUsPage() {
   const [hasDraft, setHasDraft] = useState(false);
+  const [draftToken, setDraftToken] = useState<string | null>(null);
+  const [resumeCode, setResumeCode] = useState("");
 
   useEffect(() => {
-    setHasDraft(!!getDraftToken());
+    const token = getDraftToken();
+    setHasDraft(!!token);
+    setDraftToken(token);
   }, []);
 
   return (
@@ -40,6 +45,7 @@ export default function StartWithUsPage() {
                     onClick={() => {
                       clearDraftToken();
                       setHasDraft(false);
+                      setDraftToken(null);
                     }}
                   >
                     Start over
@@ -49,8 +55,38 @@ export default function StartWithUsPage() {
             </Alert>
           </div>
         )}
+        <div className="mb-6 grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div>
+            <p className="font-semibold">Have a reference code?</p>
+            <p className="text-sm text-muted-foreground">
+              Enter the code we provided after your first save to resume or check status later.
+            </p>
+          </div>
+          <form
+            className="flex flex-col gap-2 sm:flex-row sm:items-center"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const trimmed = resumeCode.trim();
+              if (!trimmed) return;
+              storeDraftToken(trimmed);
+              setDraftToken(trimmed);
+              setHasDraft(true);
+            }}
+          >
+            <Input
+              placeholder="e.g. DP-ABC12345"
+              value={resumeCode}
+              onChange={(e) => setResumeCode(e.target.value)}
+              className="sm:w-64"
+            />
+            <Button type="submit" variant="secondary">
+              Resume
+            </Button>
+          </form>
+        </div>
+
         <div id="wizard">
-          <CarrierOnboardingWizard />
+          <CarrierOnboardingWizard initialDraftId={draftToken ?? undefined} />
         </div>
       </div>
     </div>

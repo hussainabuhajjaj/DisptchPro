@@ -41,7 +41,11 @@ import {
  * Set NEXT_PUBLIC_ALLOW_ONBOARDING_LOCAL="false" to re-enable strict server flow.
  */
 const ALLOW_LOCAL_BYPASS =
-  process.env.NEXT_PUBLIC_ALLOW_ONBOARDING_LOCAL !== "false";
+  process.env.NEXT_PUBLIC_ALLOW_ONBOARDING_LOCAL === "true";
+
+const AUTOSAVE_DELAY_MS = 8000;
+const AUTOSAVE_BACKOFF_MS = 60000;
+const DOC_POLL_INTERVAL_MS = 60000;
 
 const formSchema = z.object({
   company: z.object({
@@ -177,7 +181,18 @@ const STEP_ORDER: StepId[] = [
   "summary",
 ];
 
-export default function CarrierOnboardingWizard() {
+function normalizeFormValues(value: any): any {
+  if (value === null) return "";
+  if (Array.isArray(value)) return value.map(normalizeFormValues);
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, normalizeFormValues(v)]),
+    );
+  }
+  return value;
+}
+
+export default function CarrierOnboardingWizard({ initialDraftId }: { initialDraftId?: string }) {
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULT_VALUES,
@@ -196,6 +211,8 @@ export default function CarrierOnboardingWizard() {
   const [isPollingDocs, setIsPollingDocs] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [manualSaving, setManualSaving] = useState(false);
+  const [lastSnapshot, setLastSnapshot] = useState<string>("");
+  const [saveBlockedUntil, setSaveBlockedUntil] = useState<number>(0);
 
   const handleDocumentUpload = useCallback(
     async (key: DocumentKey, file: File) => {
@@ -279,7 +296,7 @@ export default function CarrierOnboardingWizard() {
   const currentStep = steps[currentStepIndex];
 
   useEffect(() => {
-    const token = getDraftToken();
+    const token = initialDraftId ?? getDraftToken();
     if (!token) {
       setInitializing(false);
       return;
@@ -292,7 +309,7 @@ export default function CarrierOnboardingWizard() {
         storeDraftToken(draft.draftId);
 
         if (draft.data?.formValues) {
-          form.reset(draft.data.formValues as OnboardingFormValues);
+          form.reset(normalizeFormValues(draft.data.formValues) as OnboardingFormValues);
         }
 
         if (draft.data?.documents) {
@@ -302,6 +319,12 @@ export default function CarrierOnboardingWizard() {
           });
         }
         setLastSavedAt(draft.updatedAt);
+        setLastSnapshot(
+          JSON.stringify({
+            formValues: form.getValues(),
+            documents: draft.data?.documents ?? documents,
+          }),
+        );
       } catch (error) {
         clearDraftToken();
         console.error("Failed to resume draft", error);
@@ -310,7 +333,7 @@ export default function CarrierOnboardingWizard() {
         setInitializing(false);
       }
     })();
-  }, [form]);
+  }, [form, initialDraftId]);
 
   const watchedValues = form.watch();
 
@@ -337,13 +360,17 @@ export default function CarrierOnboardingWizard() {
     if (!draftId) return;
     const interval = setInterval(() => {
       pollDocuments(draftId);
-    }, 15000);
+    }, DOC_POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [draftId, pollDocuments]);
 
   useEffect(() => {
     if (initializing) return;
-    const controller = new AbortController();
+    const snapshot = JSON.stringify({ formValues: watchedValues, documents });
+    const now = Date.now();
+    if (snapshot === lastSnapshot) return;
+    if (saveBlockedUntil && now < saveBlockedUntil) return;
+
     const timer = setTimeout(async () => {
       setIsSaving(true);
       try {
@@ -357,20 +384,20 @@ export default function CarrierOnboardingWizard() {
         setDraftId(response.draftId);
         storeDraftToken(response.draftId);
         setLastSavedAt(response.updatedAt);
+        setLastSnapshot(snapshot);
+        setSaveBlockedUntil(0);
       } catch (error) {
         console.error("Autosave failed", error);
+        setSaveBlockedUntil(Date.now() + AUTOSAVE_BACKOFF_MS);
       } finally {
-        if (!controller.signal.aborted) {
-          setIsSaving(false);
-        }
+        setIsSaving(false);
       }
-    }, 1200);
+    }, AUTOSAVE_DELAY_MS);
 
     return () => {
-      controller.abort();
       clearTimeout(timer);
     };
-  }, [watchedValues, documents, draftId, initializing]);
+  }, [watchedValues, documents, draftId, initializing, lastSnapshot, saveBlockedUntil]);
 
   async function handleNext() {
     const stepId = steps[currentStepIndex]?.id;
@@ -510,6 +537,10 @@ export default function CarrierOnboardingWizard() {
                 "Draft not saved yet"
               )}
             </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground">Reference #:</span>
+              <span className="font-semibold">{draftId ?? "Pending"}</span>
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
@@ -525,6 +556,10 @@ export default function CarrierOnboardingWizard() {
                     setDraftId(response.draftId);
                     storeDraftToken(response.draftId);
                     setLastSavedAt(response.updatedAt);
+                    setLastSnapshot(
+                      JSON.stringify({ formValues: form.getValues(), documents }),
+                    );
+                    setSaveBlockedUntil(0);
                     toast({ title: "Draft saved" });
                   } catch (error) {
                     if (ALLOW_LOCAL_BYPASS) {
@@ -539,6 +574,7 @@ export default function CarrierOnboardingWizard() {
                         title: "Save failed",
                         description: "Check API connectivity and try again.",
                       });
+                      setSaveBlockedUntil(Date.now() + AUTOSAVE_BACKOFF_MS);
                     }
                   } finally {
                     setManualSaving(false);

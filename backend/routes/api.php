@@ -18,13 +18,16 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('carrier-profiles/draft', [CarrierDraftController::class, 'store']);
-    Route::get('carrier-profiles/draft/{id}', [CarrierDraftController::class, 'show']);
-    Route::post('carrier-profiles/draft/{id}/documents', [DocumentController::class, 'store']);
-    Route::get('carrier-profiles/draft/{id}/documents', [DocumentController::class, 'index']);
-    Route::post('carrier-profiles/draft/{id}/submit', [CarrierDraftController::class, 'submit']);
+// Public carrier onboarding flow (reference-code based)
+Route::prefix('carrier-profiles')->middleware('throttle:60,1')->group(function () {
+    Route::post('draft', [CarrierDraftController::class, 'store']);
+    Route::get('draft/{id}', [CarrierDraftController::class, 'show']);
+    Route::post('draft/{id}/documents', [DocumentController::class, 'store']);
+    Route::get('draft/{id}/documents', [DocumentController::class, 'index']);
+    Route::post('draft/{id}/submit', [CarrierDraftController::class, 'submit']);
+});
 
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('dashboard/summary', [DashboardController::class, 'summary']);
     Route::get('loads', [DashboardController::class, 'loads']);
     Route::post('loads/{id}/request', [DashboardController::class, 'requestLoad']);

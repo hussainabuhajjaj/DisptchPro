@@ -5,7 +5,7 @@ import { apiClient } from "./httpClient";
  * Set NEXT_PUBLIC_ALLOW_ONBOARDING_LOCAL="false" to switch to live API calls.
  */
 const ALLOW_LOCAL_BYPASS =
-  process.env.NEXT_PUBLIC_ALLOW_ONBOARDING_LOCAL !== "false";
+  process.env.NEXT_PUBLIC_ALLOW_ONBOARDING_LOCAL === "true";
 
 const LOCAL_DRAFT_KEY = "carrier_draft_local";
 const LOCAL_DOCS_KEY = "carrier_draft_docs";
@@ -46,7 +46,6 @@ export async function saveCarrierDraft(payload: CarrierDraftPayload) {
         draftId: payload.draftId,
         data: payload.data,
       },
-      withAuth: true,
     });
   }
 
@@ -64,7 +63,6 @@ export async function saveCarrierDraft(payload: CarrierDraftPayload) {
 export async function fetchCarrierDraft(draftId: string) {
   if (!ALLOW_LOCAL_BYPASS) {
     return apiClient.get<CarrierDraftResponse>(`carrier-profiles/draft/${draftId}`, {
-      withAuth: true,
     });
   }
 
@@ -90,7 +88,6 @@ export async function submitCarrierApplication(draftId: string) {
   if (!ALLOW_LOCAL_BYPASS) {
     return apiClient.post<{ success: boolean }>(
       `carrier-profiles/draft/${draftId}/submit`,
-      { withAuth: true },
     );
   }
   return { success: true };
@@ -105,7 +102,6 @@ export async function submitCarrierApplicationWithConsent(
       `carrier-profiles/draft/${draftId}/submit`,
       {
         body: payload,
-        withAuth: true,
       },
     );
   }
@@ -128,7 +124,6 @@ export async function uploadCarrierDocument(
       `carrier-profiles/draft/${draftId}/documents`,
       {
         body: formData,
-        withAuth: true,
       },
     );
   }
@@ -153,7 +148,6 @@ export async function fetchDocumentStatuses(draftId: string) {
   if (!ALLOW_LOCAL_BYPASS) {
     return apiClient.get<DocumentStatusResponse>(
       `carrier-profiles/draft/${draftId}/documents`,
-      { withAuth: true },
     );
   }
 
