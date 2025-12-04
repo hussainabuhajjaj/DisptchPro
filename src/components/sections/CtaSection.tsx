@@ -28,12 +28,12 @@ export default function CtaSection({
           <p className="text-lg text-muted-foreground">{subtitle}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {ctaPrimaryLabel && (
-              <Button asChild size="lg">
+              <Button asChild size="lg" data-umami-event="cta-primary">
                 <Link href={ctaPrimaryHref}>{ctaPrimaryLabel}</Link>
               </Button>
             )}
             {ctaSecondaryLabel && ctaSecondaryHref && (
-              <Button asChild size="lg" variant="secondary">
+              <Button asChild size="lg" variant="secondary" data-umami-event="cta-secondary">
                 <Link href={ctaSecondaryHref}>{ctaSecondaryLabel}</Link>
               </Button>
             )}

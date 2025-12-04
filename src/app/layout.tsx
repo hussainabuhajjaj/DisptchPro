@@ -10,6 +10,7 @@ import ChatbotWidget from "@/components/chat/ChatbotWidget";
 import { fetchLandingContent } from "@/lib/landing-content";
 import { loadThemeVars } from "@/lib/theme";
 import type { CSSProperties } from "react";
+import Script from "next/script";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -58,6 +59,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const themeVars = await loadThemeVars();
+  const umamiScript =
+    process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
+  const umamiSiteId =
+    process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || "f5ede6cd-d3de-4edc-8c39-460a08c091e6";
+  const includeUmami = !!umamiScript && !!umamiSiteId;
 
   return (
     <html lang="en" className="scroll-smooth">
@@ -72,6 +78,14 @@ export default async function RootLayout({
         </AuthProvider>
         <ChatbotWidget />
         <Toaster />
+        {includeUmami && (
+          <Script
+            async
+            defer
+            src={umamiScript}
+            data-website-id={umamiSiteId}
+          />
+        )}
       </body>
     </html>
   );

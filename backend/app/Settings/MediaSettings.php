@@ -6,7 +6,7 @@ use Spatie\LaravelSettings\Settings;
 
 class MediaSettings extends Settings
 {
-    public static bool $enforceFullSettings = false;
+    public bool $enforceFullSettings = false;
 
     public ?string $hero_image_url = null;
     public ?string $why_choose_us_image_url = null;

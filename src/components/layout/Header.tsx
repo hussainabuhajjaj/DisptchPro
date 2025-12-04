@@ -26,6 +26,7 @@ type NavEntry = { href: string; label: string } | { label: string; items: { href
 
 const mainNavLinks: NavEntry[] = [
   { href: "/#services", label: "Services" },
+  { href: "/#pricing", label: "Pricing" },
   {
     label: "Who We Serve",
     items: [
@@ -42,6 +43,7 @@ const mainNavLinks: NavEntry[] = [
     ],
   },
   { href: "/#faq", label: "FAQ" },
+  { href: "/#lead-magnet", label: "Resources" },
   { href: "/#book", label: "Book a Call" },
 ];
 
@@ -118,12 +120,14 @@ export default function Header() {
   useEffect(() => {
     const sectionIds = [
       "services",
+      "pricing",
       "why-us",
       "for-shippers",
       "for-brokers",
       "kpis",
       "load-board",
       "faq",
+      "lead-magnet",
       "book",
     ];
     const observers: IntersectionObserver[] = [];

@@ -339,6 +339,7 @@ export default function CarrierOnboardingWizard({ initialDraftId }: { initialDra
 
   const pollDocuments = useCallback(
     async (targetDraftId: string) => {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
       setIsPollingDocs(true);
       try {
         const latest = await fetchDocumentStatuses(targetDraftId);
@@ -348,7 +349,12 @@ export default function CarrierOnboardingWizard({ initialDraftId }: { initialDra
           ...latest.documents,
         }));
       } catch (error) {
-        console.error("Document status refresh failed", error);
+        // Swallow transient network errors to avoid noisy console spam
+        if (error instanceof TypeError) {
+          console.warn("Document status refresh skipped (offline?)");
+        } else {
+          console.error("Document status refresh failed", error);
+        }
       } finally {
         setIsPollingDocs(false);
       }

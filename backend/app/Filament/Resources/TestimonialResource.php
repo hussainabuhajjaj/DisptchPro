@@ -57,6 +57,10 @@ class TestimonialResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('position', 'asc')
+            ->paginated([25, 50, 100])
+            ->searchDebounce(500)
+            ->striped()
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('title')->label('Role')->searchable(),
@@ -71,13 +75,21 @@ class TestimonialResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->filters([])
-            ->toolbarActions([
-               EditAction::make(),
+            ->emptyStateHeading('No testimonials yet')
+            ->emptyStateDescription('Add social proof for the marketing site.')
+            ->headerActions([
+                EditAction::make('create')->label('Create testimonial')->icon('heroicon-o-plus')->url(static::getUrl('create')),
+            ])
+            ->emptyStateActions([
+                EditAction::make('create_empty')->label('Create testimonial')->icon('heroicon-o-plus')->url(static::getUrl('create')),
+            ])
+            ->recordActions([
+                EditAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
-              BulkActionGroup::make([
-                   DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

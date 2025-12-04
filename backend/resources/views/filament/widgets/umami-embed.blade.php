@@ -1,0 +1,58 @@
+@php
+    $scriptUrl = config('services.umami.script_url');
+    $siteId = config('services.umami.website_id');
+    $dashboardUrl = config('services.umami.dashboard_url');
+@endphp
+
+<x-filament-widgets::widget>
+    <x-filament::section>
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-base font-semibold">Umami Analytics</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Embedded dashboard and tracking status</p>
+            </div>
+            @if ($dashboardUrl)
+                <a href="{{ $dashboardUrl }}" target="_blank" rel="noreferrer"
+                   class="text-sm font-medium text-primary hover:underline">
+                    Open in Umami
+                </a>
+            @endif
+        </div>
+
+        @if (!$scriptUrl || !$siteId)
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-800/60 dark:bg-amber-900/30 dark:text-amber-100">
+                <div class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3.75m0 3.75h.008v.008H12V16.5Zm.375-12.118a.75.75 0 0 0-.75 0L3.41 7.269a.75.75 0 0 0-.353.64v8.182c0 .264.14.508.365.64l7.836 4.518c.232.134.518.134.75 0l7.836-4.518a.75.75 0 0 0 .365-.64V7.909a.75.75 0 0 0-.353-.64l-7.836-4.518Z" />
+                    </svg>
+                    <div class="space-y-1">
+                        <p class="font-semibold">Umami is not configured.</p>
+                        <p class="text-sm">Set <code>UMAMI_SCRIPT_URL</code> and <code>UMAMI_WEBSITE_ID</code> in your <code>.env</code>. Optionally set <code>UMAMI_DASHBOARD_URL</code> for the embedded dashboard.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if ($dashboardUrl)
+            <div class="mt-3 overflow-hidden rounded-xl border bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div class="aspect-video">
+                    <iframe
+                        src="{{ $dashboardUrl }}"
+                        class="h-full w-full border-0"
+                        allow="clipboard-write; fullscreen"
+                        referrerpolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                </div>
+            </div>
+        @endif
+
+        <div class="mt-3 text-sm text-gray-600 dark:text-gray-300">
+            @if ($scriptUrl && $siteId)
+                <p>Tracking enabled with site ID <code>{{ $siteId }}</code>.</p>
+                <p class="mt-1 text-xs">Script: {{ $scriptUrl }}</p>
+            @else
+                <p class="text-amber-600">Tracking pending configuration.</p>
+            @endif
+        </div>
+    </x-filament::section>
+</x-filament-widgets::widget>

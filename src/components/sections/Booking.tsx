@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LoaderCircle, CheckCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createBooking } from "@/lib/booking-service";
+import { trackEvent } from "@/lib/analytics";
 
 const timeSlots = [
   "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
@@ -26,10 +27,8 @@ export default function Booking() {
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
-  const [loadApproved, setLoadApproved] = useState(true);
-  const [pricingTransparent, setPricingTransparent] = useState(true);
-  const [noContract, setNoContract] = useState(true);
-  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (date && time) {
       const [hour, minute, ampm] = time.match(/(\d+):(\d+) (AM|PM)/)!.slice(1);
@@ -47,10 +46,24 @@ export default function Booking() {
     }
   }, [date, time]);
 
+  const validate = (formData: FormData) => {
+    const next: Record<string, string> = {};
+    const name = (formData.get("name") as string)?.trim();
+    const email = (formData.get("email") as string)?.trim();
+    const phone = (formData.get("phone") as string)?.trim();
+    if (!name) next.name = "Tell us who we're meeting with.";
+    if (!email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/)) next.email = "Enter a valid email.";
+    if (phone && phone.length < 7) next.phone = "Add a full phone number.";
+    if (!dateTimeString) next.date = "Select a date and time.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setMessage("");
+    setErrors({});
     try {
       const formData = new FormData(event.currentTarget);
       const name = formData.get("name") as string;
@@ -58,8 +71,9 @@ export default function Booking() {
       const phone = (formData.get("phone") as string) || undefined;
       const notes = (formData.get("message") as string) || undefined;
 
-      if (!dateTimeString) {
-        throw new Error("Please select a date and time.");
+      if (!validate(formData)) {
+        setPending(false);
+        return;
       }
 
       await createBooking({
@@ -75,6 +89,7 @@ export default function Booking() {
       setSuccess(true);
       setMessage("Your consultation request has been received! We will contact you shortly to confirm the details.");
       toast({ title: "Success!", description: "Booking submitted." });
+      trackEvent("booking-submit-success", { time: dateTimeString, hasPhone: !!phone });
     } catch (error: any) {
       const errMsg =
         error?.data?.message ||
@@ -82,6 +97,7 @@ export default function Booking() {
         "Unable to submit booking. Please try again.";
       setMessage(errMsg);
       toast({ title: "Error", description: errMsg, variant: "destructive" });
+      trackEvent("booking-submit-error");
     } finally {
       setPending(false);
     }
@@ -146,6 +162,7 @@ export default function Booking() {
                   </SelectContent>
                 </Select>
                </div>
+              {errors.date && <p className="text-sm text-destructive">{errors.date}</p>}
             </div>
             <div className="p-6">
               <CardHeader className="p-0 mb-6">
@@ -158,22 +175,36 @@ export default function Booking() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" name="name" placeholder="John Doe" required />
+                      <Input id="name" name="name" placeholder="John Doe" required aria-invalid={!!errors.name} />
+                      {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" name="email" type="email" placeholder="john.doe@example.com" required />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="john.doe@example.com"
+                        required
+                        aria-invalid={!!errors.email}
+                      />
+                      {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" name="phone" placeholder="+1 (555) 123-4567" />
+                    <Input id="phone" name="phone" placeholder="+1 (555) 123-4567" aria-invalid={!!errors.phone} />
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                   </div>
                    <div className="space-y-2">
                     <Label htmlFor="message">Message (Optional)</Label>
                     <Textarea id="message" name="message" placeholder="Tell us about your business or any questions you have." />
                   </div>
-                  <Button type="submit" className="w-full" disabled={pending}>
+                  <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                    <span>We confirm lanes before booking anything. No long-term contracts.</span>
+                    <span>Response time: under 3 minutes during operating hours.</span>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={pending} data-umami-event="booking-submit">
                     {pending ? (
                       <>
                         <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

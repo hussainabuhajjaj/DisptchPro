@@ -6,6 +6,8 @@ use App\Filament\Resources\CarrierDraftResource\Pages;
 use App\Models\CarrierDraft;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -19,35 +21,55 @@ class CarrierDraftResource extends Resource
 
     protected static \UnitEnum|string|null $navigationGroup = 'Carrier Onboarding';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $submitted = CarrierDraft::where('status', 'submitted')->count();
+        return $submitted > 0 ? (string) $submitted : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
     public static function form(Schema $form): Schema
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'email')
-                    ->searchable()
-                    ->required(),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'submitted' => 'Submitted',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                    ])
-                    ->required(),
-                Forms\Components\KeyValue::make('data')
-                    ->label('Payload')
-                    ->columnSpanFull()
-                    ->helperText('JSON payload captured from the onboarding wizard.'),
-                Forms\Components\KeyValue::make('consent')
-                    ->label('Consent')
-                    ->columnSpanFull(),
+                Section::make('Draft')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            Forms\Components\Select::make('user_id')
+                                ->relationship('user', 'email')
+                                ->searchable()
+                                ->required(),
+                            Forms\Components\Select::make('status')
+                                ->options([
+                                    'draft' => 'Draft',
+                                    'submitted' => 'Submitted',
+                                    'approved' => 'Approved',
+                                    'rejected' => 'Rejected',
+                                ])
+                                ->required(),
+                        ]),
+                        Forms\Components\KeyValue::make('data')
+                            ->label('Payload')
+                            ->columnSpanFull()
+                            ->helperText('JSON payload captured from the onboarding wizard.'),
+                        Forms\Components\KeyValue::make('consent')
+                            ->label('Consent')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('updated_at', 'desc')
+            ->paginated([25, 50, 100])
+            ->searchDebounce(500)
+            ->striped()
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('user.email')
@@ -72,12 +94,23 @@ class CarrierDraftResource extends Resource
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
                     ]),
+                Tables\Filters\Filter::make('stale')
+                    ->label('Stale (14d+)')
+                    ->query(fn ($query) => $query->whereDate('updated_at', '<=', now()->subDays(14))),
             ])
-            ->actions([
+            ->emptyStateHeading('No drafts yet')
+            ->emptyStateDescription('Onboard carriers with drafts and approvals.')
+            ->headerActions([
+                Actions\CreateAction::make(),
+            ])
+            ->emptyStateActions([
+                Actions\CreateAction::make(),
+            ])
+            ->recordActions([
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 Actions\BulkActionGroup::make([
                     Actions\DeleteBulkAction::make(),
                 ]),

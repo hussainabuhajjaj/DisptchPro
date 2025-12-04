@@ -58,6 +58,10 @@ class LandingSectionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('position', 'asc')
+            ->paginated([25, 50, 100])
+            ->searchDebounce(500)
+            ->striped()
             ->columns([
                 Tables\Columns\TextColumn::make('slug')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('title')->searchable()->limit(40),
@@ -68,11 +72,19 @@ class LandingSectionResource extends Resource
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')->label('Active'),
             ])
-            ->actions([
+            ->emptyStateHeading('No landing sections yet')
+            ->emptyStateDescription('Create sections to power the marketing site.')
+            ->headerActions([
+                Actions\CreateAction::make(),
+            ])
+            ->emptyStateActions([
+                Actions\CreateAction::make(),
+            ])
+            ->recordActions([
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 Actions\BulkActionGroup::make([
                     Actions\DeleteBulkAction::make(),
                 ]),

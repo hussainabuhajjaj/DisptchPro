@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\LandingContentController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\LoadApiController;
+use App\Http\Controllers\Api\ClientApiController;
+use App\Http\Controllers\Api\DriverApiController;
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -31,6 +34,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('dashboard/summary', [DashboardController::class, 'summary']);
     Route::get('loads', [DashboardController::class, 'loads']);
     Route::post('loads/{id}/request', [DashboardController::class, 'requestLoad']);
+    // TMS API
+    Route::get('tms/loads', [LoadApiController::class, 'index']);
+    Route::get('tms/loads/{load}', [LoadApiController::class, 'show']);
+    Route::patch('tms/loads/{load}/status', [LoadApiController::class, 'updateStatus']);
+    Route::get('tms/drivers/{driver}/loads', [DriverApiController::class, 'loads']);
+    Route::get('tms/clients', [ClientApiController::class, 'index']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin|staff'])->group(function () {

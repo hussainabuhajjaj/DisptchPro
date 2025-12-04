@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import { fetchLandingContent } from "@/lib/landing-content";
 import { fetchSiteSettings } from "@/lib/site-settings";
 import { LandingSection } from "@/lib/landing-content";
+import LeadMagnet from "@/components/sections/LeadMagnet";
 
 const Hero = dynamic(() => import("@/components/sections/Hero"), { ssr: true });
 const Services = dynamic(() => import("@/components/sections/Services"), { ssr: true });
@@ -17,6 +18,7 @@ const KpiSection = dynamic(() => import("@/components/sections/KpiSection"), { s
 const LoadBoardPreview = dynamic(() => import("@/components/sections/LoadBoardPreview"), { ssr: true });
 const CtaSection = dynamic(() => import("@/components/sections/CtaSection"), { ssr: true });
 const ResourcesSection = dynamic(() => import("@/components/sections/ResourcesSection"), { ssr: true });
+const PricingSection = dynamic(() => import("@/components/sections/PricingSection"), { ssr: true });
 
 export default async function Home() {
   // Load landing content to align metadata/theming and future rendering
@@ -159,6 +161,7 @@ export default async function Home() {
         bullets={forBrokersBullets}
         imageUrl={mediaImages.forBrokers}
       />
+      <PricingSection />
       <ProfitCalculator />
       <Roadmap />
       <Testimonials
@@ -191,6 +194,7 @@ export default async function Home() {
         subtitle={(sectionsBySlug["resources"]?.subtitle as string) || undefined}
         resources={resourcesList}
       />
+      <LeadMagnet />
       <CtaSection
         title={(sectionsBySlug["cta"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["cta"]?.subtitle as string) || undefined}

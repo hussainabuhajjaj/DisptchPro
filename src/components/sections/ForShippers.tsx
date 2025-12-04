@@ -55,14 +55,17 @@ export default function ForShippers({
                 </li>
               ))}
             </ul>
-            <div className="mt-4">
+            <div className="mt-4 flex flex-col sm:flex-row gap-3">
               {ctaLabel && (
-                <Button asChild size="lg" className="font-semibold shadow-md">
+                <Button asChild size="lg" className="font-semibold shadow-md" data-umami-event="shipper-primary-cta">
                   <Link href={ctaHref}>
                     {ctaLabel} <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
               )}
+              <Button asChild variant="outline" size="lg" data-umami-event="shipper-secondary-cta">
+                <Link href="#lead-magnet">See the shipper playbook</Link>
+              </Button>
             </div>
           </div>
            <div className="relative h-80 w-full rounded-2xl overflow-hidden shadow-xl">

@@ -4,8 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CarrierProfileResource\Pages;
 use App\Models\CarrierProfile;
-use Filament\Actions\Action;
+use Filament\Actions;
 use Filament\Forms;
+use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -23,7 +24,7 @@ class CarrierProfileResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Carrier Info')->schema([
+                Section::make('Carrier Info')->schema([
                     Forms\Components\TextInput::make('carrier_info.companyName')->label('Company')->disabled(),
                     Forms\Components\TextInput::make('carrier_info.mainContact')->label('Main Contact')->disabled(),
                     Forms\Components\TextInput::make('carrier_info.email')->label('Email')->disabled(),
@@ -36,28 +37,28 @@ class CarrierProfileResource extends Resource
                         ->disabled()
                         ->columnSpanFull(),
                 ]),
-                Forms\Components\Section::make('Equipment')->schema([
+                Section::make('Equipment')->schema([
                     Forms\Components\KeyValue::make('equipment_info')
                         ->label('Equipment Info')
                         ->disableAddingRows()
                         ->disableDeletingRows()
                         ->disabled(),
                 ])->collapsed(),
-                Forms\Components\Section::make('Operations')->schema([
+                Section::make('Operations')->schema([
                     Forms\Components\KeyValue::make('operation_info')
                         ->label('Operation Info')
                         ->disableAddingRows()
                         ->disableDeletingRows()
                         ->disabled(),
                 ])->collapsed(),
-                Forms\Components\Section::make('Factoring')->schema([
+                Section::make('Factoring')->schema([
                     Forms\Components\KeyValue::make('factoring_info')
                         ->label('Factoring Info')
                         ->disableAddingRows()
                         ->disableDeletingRows()
                         ->disabled(),
                 ])->collapsed(),
-                Forms\Components\Section::make('Insurance')->schema([
+                Section::make('Insurance')->schema([
                     Forms\Components\KeyValue::make('insurance_info')
                         ->label('Insurance Info')
                         ->disableAddingRows()
@@ -70,6 +71,10 @@ class CarrierProfileResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
+            ->paginated([25, 50, 100])
+            ->searchDebounce(500)
+            ->striped()
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('carrier_info.companyName')
@@ -89,13 +94,15 @@ class CarrierProfileResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->filters([])
-            ->actions([
-                Action::make('view')
+            ->recordActions([
+                Actions\Action::make('view')
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->url(fn ($record) => static::getUrl('view', ['record' => $record])),
             ])
-            ->bulkActions([]);
+            ->toolbarActions([])
+            ->emptyStateHeading('No carrier profiles yet')
+            ->emptyStateDescription('Profiles appear when carriers submit onboarding data.');
     }
 
     public static function getPages(): array

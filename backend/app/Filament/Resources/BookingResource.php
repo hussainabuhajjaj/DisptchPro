@@ -6,6 +6,8 @@ use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -19,51 +21,81 @@ class BookingResource extends Resource
 
     protected static \UnitEnum|string|null $navigationGroup = 'Scheduling';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $pending = Booking::where('status', 'pending')->count();
+        $upcoming = Booking::whereDate('start_at', '>=', now())
+            ->whereDate('start_at', '<=', now()->addDays(7))
+            ->count();
+        $badge = $pending ?: $upcoming;
+        return $badge ? (string) $badge : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
     public static function form(Schema $form): Schema
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('type')
-                    ->options([
-                        'call' => 'Call',
-                        'onboarding' => 'Onboarding',
-                        'demo' => 'Demo',
-                    ])
-                    ->required(),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'confirmed' => 'Confirmed',
-                        'cancelled' => 'Cancelled',
-                    ])
-                    ->default('pending')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('start_at')
-                    ->label('Start')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('end_at')
-                    ->label('End')
-                    ->helperText('Optional, defaults to start time if empty.'),
-                Forms\Components\TextInput::make('carrier_name')
-                    ->label('Carrier name')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('phone')
-                    ->tel()
-                    ->maxLength(50),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('notes')
-                    ->rows(3),
+            Section::make('Booking')
+                ->schema([
+                        Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('title')
+                                ->required()
+                                ->maxLength(255),
+                            Forms\Components\Select::make('type')
+                                ->options([
+                                    'call' => 'Call',
+                                    'onboarding' => 'Onboarding',
+                                    'demo' => 'Demo',
+                                ])
+                                ->required(),
+                            Forms\Components\Select::make('status')
+                                ->options([
+                                    'pending' => 'Pending',
+                                    'confirmed' => 'Confirmed',
+                                    'cancelled' => 'Cancelled',
+                                ])
+                                ->default('pending')
+                                ->required(),
+                            Forms\Components\DateTimePicker::make('start_at')
+                                ->label('Start')
+                                ->required(),
+                            Forms\Components\DateTimePicker::make('end_at')
+                                ->label('End')
+                                ->helperText('Optional, defaults to start time if empty.'),
+                        ]),
+                    ]),
+            Section::make('Contact')
+                ->schema([
+                        Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('carrier_name')
+                                ->label('Carrier name')
+                                ->maxLength(255),
+                            Forms\Components\TextInput::make('phone')
+                                ->tel()
+                                ->maxLength(50),
+                            Forms\Components\TextInput::make('email')
+                                ->email()
+                                ->maxLength(255),
+                        ]),
+                        Forms\Components\Textarea::make('notes')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('start_at', 'desc')
+            ->paginated([25, 50, 100])
+            ->searchDebounce(500)
+            ->striped()
             ->columns([
                 Tables\Columns\TextColumn::make('title')->searchable(),
                 Tables\Columns\TextColumn::make('type')->badge()->sortable(),
@@ -94,12 +126,26 @@ class BookingResource extends Resource
                         'onboarding' => 'Onboarding',
                         'demo' => 'Demo',
                     ]),
+                Tables\Filters\Filter::make('upcoming')
+                    ->label('Next 7 days')
+                    ->query(fn ($query) => $query
+                        ->whereDate('start_at', '>=', now())
+                        ->whereDate('start_at', '<=', now()->addDays(7))
+                    ),
             ])
-            ->actions([
+            ->emptyStateHeading('No bookings yet')
+            ->emptyStateDescription('Use the booking form to capture calls, demos, or onboarding requests.')
+            ->headerActions([
+                Actions\CreateAction::make(),
+            ])
+            ->emptyStateActions([
+                Actions\CreateAction::make(),
+            ])
+            ->recordActions([
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 Actions\BulkActionGroup::make([
                     Actions\DeleteBulkAction::make(),
                 ]),

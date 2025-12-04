@@ -6,6 +6,15 @@ use App\Models\User;
 use Database\Seeders\LandingSectionSeeder;
 use Database\Seeders\MediaSeeder;
 use Database\Seeders\SettingsSeeder;
+use Database\Seeders\BookingSeeder;
+use Database\Seeders\TestimonialSeeder;
+use Database\Seeders\RoleSeeder;
+use Database\Seeders\ClientSeeder;
+use Database\Seeders\CarrierSeeder;
+use Database\Seeders\DriverSeeder;
+use Database\Seeders\LoadSeeder;
+use Database\Seeders\LoadStopSeeder;
+use Database\Seeders\LoadStressSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -22,7 +31,16 @@ class DatabaseSeeder extends Seeder
         $this->call([
             LandingSectionSeeder::class,
             MediaSeeder::class,
-            SettingsSeeder::class,
+            TestimonialSeeder::class,
+            BookingSeeder::class,
+            RoleSeeder::class,
+            ClientSeeder::class,
+            CarrierSeeder::class,
+            DriverSeeder::class,
+            LoadSeeder::class,
+            LoadStopSeeder::class,
+            ScenarioSeeder::class,
+            LoadStressSeeder::class,
         ]);
     }
 }

@@ -29,10 +29,17 @@ return [
     ],
 
     'slack' => [
+        'webhook_url' => env('SLACK_WEBHOOK_URL'),
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    'umami' => [
+        'script_url' => env('UMAMI_SCRIPT_URL'),
+        'website_id' => env('UMAMI_WEBSITE_ID'),
+        'dashboard_url' => env('UMAMI_DASHBOARD_URL'),
     ],
 
 ];

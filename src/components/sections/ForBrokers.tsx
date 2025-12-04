@@ -69,14 +69,17 @@ export default function ForBrokers({
                 </li>
               ))}
             </ul>
-             <div className="mt-4">
+            <div className="mt-4 flex flex-col sm:flex-row gap-3">
               {ctaLabel && (
-                <Button asChild size="lg" className="font-semibold shadow-md">
+                <Button asChild size="lg" className="font-semibold shadow-md" data-umami-event="broker-primary-cta">
                   <Link href={ctaHref}>
                     {ctaLabel} <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
               )}
+              <Button asChild variant="outline" size="lg" data-umami-event="broker-secondary-cta">
+                <Link href="#lead-magnet">Get the surge coverage playbook</Link>
+              </Button>
             </div>
           </div>
         </div>

@@ -21,8 +21,8 @@ export default function Hero({
   badge,
   ctaPrimaryLabel = "Book a Free Consultation",
   ctaPrimaryHref = "#book",
-  ctaSecondaryLabel,
-  ctaSecondaryHref,
+  ctaSecondaryLabel = "Download the Route Optimization Checklist",
+  ctaSecondaryHref = "#lead-magnet",
   imageUrl,
 }: HeroProps) {
   const heroImage = PlaceHolderImages.find((img) => img.id === "hero-background");
@@ -32,6 +32,11 @@ export default function Hero({
     { label: "24/7 operations", Icon: Timer },
     { label: "99% on-time delivery", Icon: ShieldCheck },
     { label: "Nationwide coverage", Icon: Truck },
+  ];
+  const proof = [
+    { label: "Avg RPM last 30 days", value: "$2.85" },
+    { label: "Owner-ops onboarded", value: "140+" },
+    { label: "Avg response time", value: " < 3 min" },
   ];
 
   return (
@@ -69,7 +74,7 @@ export default function Hero({
             <div className="flex flex-col sm:flex-row gap-3">
               {ctaPrimaryLabel && (
                 <Button asChild size="lg" className="font-semibold shadow-lg">
-                  <Link href={ctaPrimaryHref}>
+                  <Link href={ctaPrimaryHref} data-umami-event="hero-primary-cta">
                     {ctaPrimaryLabel} <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -81,7 +86,9 @@ export default function Hero({
                   variant="outline"
                   className="font-semibold border-white/70 text-white hover:text-white hover:bg-white/10"
                 >
-                  <Link href={ctaSecondaryHref}>{ctaSecondaryLabel}</Link>
+                  <Link href={ctaSecondaryHref} data-umami-event="hero-secondary-cta">
+                    {ctaSecondaryLabel}
+                  </Link>
                 </Button>
               )}
             </div>
@@ -93,6 +100,17 @@ export default function Hero({
                 >
                   <Icon className="h-5 w-5 text-primary" />
                   <span>{label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+              {proof.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-xl bg-white/10 px-4 py-3 shadow-sm backdrop-blur border border-white/15 flex items-center justify-between"
+                >
+                  <span className="text-white/80">{item.label}</span>
+                  <span className="font-semibold text-white">{item.value}</span>
                 </div>
               ))}
             </div>

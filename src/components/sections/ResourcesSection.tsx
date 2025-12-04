@@ -44,7 +44,7 @@ export default function ResourcesSection({
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {list.map((resource) => (
-            <Card
+              <Card
               key={resource.title}
               className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
             >
@@ -53,7 +53,11 @@ export default function ResourcesSection({
                 <CardDescription>{resource.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link href={resource.href} className="text-primary text-sm font-semibold hover:underline">
+                <Link
+                  href={resource.href}
+                  className="text-primary text-sm font-semibold hover:underline"
+                  data-umami-event="resource-link"
+                >
                   Read more
                 </Link>
               </CardContent>
