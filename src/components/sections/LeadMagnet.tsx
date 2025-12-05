@@ -13,9 +13,7 @@ import { createBooking } from "@/lib/booking-service";
 
 type Errors = Partial<Record<"name" | "email" | "role", string>>;
 
-const leadMagnetHref = "/docs/route-optimization-checklist.pdf";
-
-export default function LeadMagnet() {
+export default function LeadMagnet({ downloadUrl }: { downloadUrl?: string }) {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
@@ -94,7 +92,7 @@ export default function LeadMagnet() {
       data-umami-event="lead-magnet-download"
       variant="secondary"
     >
-      <a href={leadMagnetHref} target="_blank" rel="noopener noreferrer">
+      <a href={downloadUrl || "/docs/route-optimization-checklist.pdf"} target="_blank" rel="noopener noreferrer">
         <Download className="h-4 w-4 mr-2" />
         Download the checklist
       </a>

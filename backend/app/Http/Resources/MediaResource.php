@@ -21,6 +21,7 @@ class MediaResource extends JsonResource
             'testimonial_avatar_1_url' => $this->formatUrl($this->testimonial_avatar_1_url),
             'testimonial_avatar_2_url' => $this->formatUrl($this->testimonial_avatar_2_url),
             'testimonial_avatar_3_url' => $this->formatUrl($this->testimonial_avatar_3_url),
+            'lead_magnet_url' => $this->formatUrl($this->lead_magnet_url),
             'meta' => [
                 'hero_image_meta' => $this->hero_image_meta,
                 'why_choose_us_image_meta' => $this->why_choose_us_image_meta,
@@ -29,6 +30,7 @@ class MediaResource extends JsonResource
                 'testimonial_avatar_1_meta' => $this->testimonial_avatar_1_meta,
                 'testimonial_avatar_2_meta' => $this->testimonial_avatar_2_meta,
                 'testimonial_avatar_3_meta' => $this->testimonial_avatar_3_meta,
+                'lead_magnet_meta' => $this->lead_magnet_meta,
             ],
         ];
     }

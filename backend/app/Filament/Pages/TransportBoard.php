@@ -26,7 +26,8 @@ class TransportBoard extends Page
     {
         /** @var self $page */
         $page = app(static::class);
-        return cache()->remember('tms-map-data', 30, fn () => $page->getLoadsForMap()->all());
+        // Use file cache to avoid DB cache size limits for large polylines.
+        return Cache::store('file')->remember('tms-map-data', 30, fn () => $page->getLoadsForMap()->all());
     }
 
     protected static function haversine(array $a, array $b): float
@@ -163,6 +164,15 @@ class TransportBoard extends Page
 
                 $startDate = $stops->pluck('date')->filter()->min();
                 $endDate = $stops->pluck('date')->filter()->max();
+                // Prefer delivery stop date_to if present for tighter SLA windows.
+                $deliveryDateTo = $load->stops
+                    ->where('type', 'delivery')
+                    ->map(fn ($stop) => optional($stop->date_to)->toDateString())
+                    ->filter()
+                    ->max();
+                if ($deliveryDateTo) {
+                    $endDate = $deliveryDateTo;
+                }
 
                 $distanceMiles = null;
                 $etaHours = null;
@@ -200,9 +210,18 @@ class TransportBoard extends Page
                 }
 
                 $now = now()->toDateString();
-                $isLate = $endDate && $endDate < $now && !in_array($load->status, ['delivered', 'completed']);
-                $isAtRisk = $endDate && !$isLate && !in_array($load->status, ['delivered', 'completed']) && $endDate <= now()->addHours(6)->toDateString();
-                $routeStatus = $isLate ? 'late' : ($isAtRisk ? 'at_risk' : 'on_time');
+                $isLate = false;
+                $isAtRisk = false;
+                // Prefer model accessor if available; otherwise compute from stops.
+                $routeStatus = $load->route_status ?? null;
+                if (!$routeStatus || $routeStatus === 'on_time') {
+                    $isLate = $endDate && $endDate < $now && !in_array($load->status, ['delivered', 'completed']);
+                    $isAtRisk = $endDate && !$isLate && !in_array($load->status, ['delivered', 'completed']) && $endDate <= now()->addHours(6)->toDateString();
+                    $routeStatus = $isLate ? 'late' : ($isAtRisk ? 'at_risk' : 'on_time');
+                } else {
+                    $isLate = $routeStatus === 'late';
+                    $isAtRisk = $routeStatus === 'at_risk';
+                }
                 if ($isLate) {
                     $slaFlags[] = 'Late delivery window';
                 } elseif ($isAtRisk) {
@@ -217,6 +236,7 @@ class TransportBoard extends Page
                     'carrier' => $load->carrier?->name,
                     'driver' => $load->driver?->name,
                     'dispatcher' => $load->dispatcher?->name,
+                    'dispatcher_id' => $load->dispatcher_id,
                     'lane' => $lane,
                     'stops' => $stops,
                     'truck_position' => $truckPosition,

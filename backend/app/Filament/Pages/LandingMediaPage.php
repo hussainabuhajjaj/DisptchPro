@@ -49,20 +49,21 @@ class LandingMediaPage extends Page
     {
         $this->callHook('beforeFill');
 
-        $media = Media::firstOrCreate(
-            ['id' => 1],
-            [
-                'hero_image_url' => null,
-                'why_choose_us_image_url' => null,
-                'for_shippers_image_url' => null,
-                'for_brokers_image_url' => null,
-                'testimonial_avatar_1_url' => null,
-                'testimonial_avatar_2_url' => null,
-                'testimonial_avatar_3_url' => null,
-            ],
-        );
+                $media = Media::firstOrCreate(
+                    ['id' => 1],
+                    [
+                        'hero_image_url' => null,
+                        'why_choose_us_image_url' => null,
+                        'for_shippers_image_url' => null,
+                        'for_brokers_image_url' => null,
+                        'testimonial_avatar_1_url' => null,
+                        'testimonial_avatar_2_url' => null,
+                        'testimonial_avatar_3_url' => null,
+                        'lead_magnet_url' => null,
+                    ],
+                );
 
-        $this->form->fill($media->toArray());
+                $this->form->fill($media->toArray());
 
         $this->callHook('afterFill');
     }
@@ -89,6 +90,7 @@ class LandingMediaPage extends Page
         $media->testimonial_avatar_1_meta = $this->buildImageMeta($data['testimonial_avatar_1_url'] ?? null);
         $media->testimonial_avatar_2_meta = $this->buildImageMeta($data['testimonial_avatar_2_url'] ?? null);
         $media->testimonial_avatar_3_meta = $this->buildImageMeta($data['testimonial_avatar_3_url'] ?? null);
+        $media->lead_magnet_meta = $this->buildImageMeta($data['lead_magnet_url'] ?? null);
         $media->save();
 
             $this->callHook('afterSave');
@@ -188,6 +190,17 @@ class LandingMediaPage extends Page
                         ->directory('media/landing/avatars')
                         ->visibility('public')
                         ->maxSize(2048),
+                ]),
+            Section::make('Lead magnet')
+                ->columns(1)
+                ->schema([
+                    FileUpload::make('lead_magnet_url')
+                        ->label('Lead magnet PDF')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->disk('public')
+                        ->directory('media/lead-magnet')
+                        ->visibility('public')
+                        ->maxSize(12000),
                 ]),
         ]);
     }

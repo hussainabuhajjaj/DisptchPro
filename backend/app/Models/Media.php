@@ -19,6 +19,7 @@ class Media extends Model
         'testimonial_avatar_1_url',
         'testimonial_avatar_2_url',
         'testimonial_avatar_3_url',
+        'lead_magnet_url',
         'hero_image_meta',
         'why_choose_us_image_meta',
         'for_shippers_image_meta',
@@ -26,6 +27,7 @@ class Media extends Model
         'testimonial_avatar_1_meta',
         'testimonial_avatar_2_meta',
         'testimonial_avatar_3_meta',
+        'lead_magnet_meta',
         'enforce_full_settings',
     ];
 
@@ -39,6 +41,7 @@ class Media extends Model
             'testimonial_avatar_1_meta' => 'array',
             'testimonial_avatar_2_meta' => 'array',
             'testimonial_avatar_3_meta' => 'array',
+            'lead_magnet_meta' => 'array',
             'enforce_full_settings' => 'bool',
         ];
     }

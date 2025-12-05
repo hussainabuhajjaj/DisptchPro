@@ -58,7 +58,7 @@ class PaymentsRelationManager extends RelationManager
                 Action::make('add')
                     ->label('Add')
                     ->icon('heroicon-o-plus')
-                    ->form($this->form(app(FormSchema::class))->getComponents())
+                    ->schema($this->form(app(FormSchema::class))->getComponents())
                     ->action(function (array $data) {
                         $settlement = $this->getOwnerRecord();
                         $outstanding = $settlement->balance ?? ($settlement->total - $settlement->payments()->sum('amount'));

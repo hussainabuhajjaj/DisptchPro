@@ -441,7 +441,7 @@ class LoadResource extends Resource
             ]
         ));
 
-        $webhook = config('services.slack.webhook') ?? env('SLA_SLACK_WEBHOOK');
+        $webhook = config('services.slack.webhook_url') ?? env('SLA_SLACK_WEBHOOK');
         if ($webhook) {
             \Illuminate\Support\Facades\Http::post($webhook, [
                 'text' => "Load {$load->load_number} flagged: {$status}",

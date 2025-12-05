@@ -18,7 +18,7 @@ class SendLoadAlerts implements ShouldQueue
 
     public function handle(): void
     {
-        $loads = Load::with('dispatcher')
+        $loads = Load::with(['dispatcher', 'stops'])
             ->whereNotIn('status', ['delivered', 'completed', 'cancelled'])
             ->orderByDesc('id')
             ->get();
@@ -27,13 +27,15 @@ class SendLoadAlerts implements ShouldQueue
         $alerts = [];
 
         foreach ($loads as $load) {
-            if (!$load->end_date) {
+            // Prefer explicit end_date if present, otherwise use latest delivery stop date.
+            $endDate = $load->end_date ?? optional($load->stops->where('type', 'delivery')->max('date_from'))->toDateString();
+            if (!$endDate) {
                 continue;
             }
-            if ($load->end_date < $now) {
-                $alerts[] = ['load' => $load, 'status' => 'late', 'message' => "Load {$load->load_number} is late (end: {$load->end_date})"];
-            } elseif ($load->end_date <= now()->addHours(6)->toDateString()) {
-                $alerts[] = ['load' => $load, 'status' => 'at_risk', 'message' => "Load {$load->load_number} at risk (end: {$load->end_date})"];
+            if ($endDate < $now) {
+                $alerts[] = ['load' => $load, 'status' => 'late', 'message' => "Load {$load->load_number} is late (end: {$endDate})"];
+            } elseif ($endDate <= now()->addHours(6)->toDateString()) {
+                $alerts[] = ['load' => $load, 'status' => 'at_risk', 'message' => "Load {$load->load_number} at risk (end: {$endDate})"];
             }
         }
 
@@ -49,8 +51,8 @@ class SendLoadAlerts implements ShouldQueue
                 ]));
             }
 
-            // Optional Slack webhook (set SLA_SLACK_WEBHOOK in .env)
-            $webhook = config('services.slack.webhook') ?? env('SLA_SLACK_WEBHOOK');
+            // Optional Slack webhook (config services.slack.webhook_url or SLA_SLACK_WEBHOOK fallback)
+            $webhook = config('services.slack.webhook_url') ?? env('SLA_SLACK_WEBHOOK');
             if ($webhook) {
                 Http::post($webhook, [
                     'text' => $alert['message'],

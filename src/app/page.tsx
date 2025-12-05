@@ -50,6 +50,7 @@ export default async function Home() {
     testimonialAvatar2: media.testimonial_avatar_2_url as string | undefined,
     testimonialAvatar3: media.testimonial_avatar_3_url as string | undefined,
   };
+  const leadMagnetUrl = media.lead_magnet_url as string | undefined;
 
   const heroContent = sectionsBySlug["hero"]?.content || {};
   const featuresContent = sectionsBySlug["features"]?.content || {};
@@ -194,7 +195,7 @@ export default async function Home() {
         subtitle={(sectionsBySlug["resources"]?.subtitle as string) || undefined}
         resources={resourcesList}
       />
-      <LeadMagnet />
+      <LeadMagnet downloadUrl={leadMagnetUrl} />
       <CtaSection
         title={(sectionsBySlug["cta"]?.title as string) || undefined}
         subtitle={(sectionsBySlug["cta"]?.subtitle as string) || undefined}

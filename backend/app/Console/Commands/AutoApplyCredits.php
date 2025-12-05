@@ -58,7 +58,7 @@ class AutoApplyCredits extends Command
             return "{$c->entity_type} #{$c->entity_id} - credit #{$c->id} \${$c->remaining} exp {$exp}";
         })->implode("\n");
 
-        $webhook = config('services.slack.webhook') ?? env('SLA_SLACK_WEBHOOK');
+        $webhook = config('services.slack.webhook_url') ?? env('SLA_SLACK_WEBHOOK');
         if ($webhook) {
             Http::post($webhook, [
                 'text' => "Credits expiring within 7 days:\n" . $summary,

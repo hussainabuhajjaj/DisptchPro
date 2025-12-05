@@ -1,3 +1,22 @@
+@php
+    $statusColors = [
+        'draft' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+        'posted' => 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200',
+        'assigned' => 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200',
+        'in_transit' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200',
+        'delivered' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200',
+        'completed' => 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200',
+        'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200',
+    ];
+    $statusOptions = array_keys($statusColors);
+    $dispatchers = collect($loads)->map(fn($l) => ['id' => $l['dispatcher_id'] ?? null, 'name' => $l['dispatcher'] ?? null])
+        ->filter(fn($d) => $d['id'] && $d['name'])
+        ->unique('id')
+        ->sortBy('name')
+        ->values();
+    $drivers = collect($loads)->pluck('driver')->filter()->unique()->sort()->values();
+@endphp
+
 @once
     @push('styles')
         <link
@@ -50,6 +69,67 @@
             .tms-hidden { display: none !important; }
             .tms-highlight { border-color: var(--tms-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.3); }
             .tms-map-alert { position: absolute; top: 12px; right: 12px; background: #fff; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--tms-border); box-shadow: 0 6px 18px rgba(0,0,0,0.08); font-size: 12px; }
+            .tms-status-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border:1px solid var(--tms-border); border-radius: var(--tms-card-radius); background: var(--tms-bg); box-shadow: 0 4px 14px rgba(0,0,0,0.04); }
+            .tms-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid var(--tms-border); background:#f8fafc; color:#111827; }
+            .tms-chip.bad { border-color:#fecdd3; color:#b91c1c; background:#fff1f2; }
+            .tms-chip.warn { border-color:#fcd34d; color:#92400e; background:#fffbeb; }
+            .tms-chip.good { border-color:#bbf7d0; color:#065f46; background:#ecfdf3; }
+            .tms-chip.muted { border-color:#e5e7eb; color:#4b5563; background:#f9fafb; }
+            .tms-sla-label {
+                background:#fff;
+                border:1px solid #e5e7eb;
+                border-radius:999px;
+                padding:4px 8px;
+                font-size:11px;
+                font-weight:600;
+                box-shadow:0 4px 10px rgba(0,0,0,0.08);
+                color:#111827;
+                line-height:1.2;
+            }
+            .tms-stop-label {
+                background:#111827;
+                color:#f8fafc;
+                padding:2px 6px;
+                border-radius:6px;
+                font-size:11px;
+                border:1px solid #1f2937;
+            }
+            .tms-city-label {
+                background:#0f172a;
+                color:#e2e8f0;
+                padding:3px 7px;
+                border-radius:8px;
+                font-size:12px;
+                border:1px solid rgba(255,255,255,0.2);
+                box-shadow:0 6px 14px rgba(0,0,0,0.2);
+                white-space: nowrap;
+            }
+            .tms-mini-btn {
+                border:1px solid var(--tms-border);
+                border-radius:8px;
+                padding:4px 8px;
+                font-size:11px;
+                background:#fff;
+                cursor:pointer;
+            }
+            .tms-mini-select {
+                border:1px solid var(--tms-border);
+                border-radius:8px;
+                padding:3px 6px;
+                font-size:11px;
+                background:#fff;
+            }
+            .tms-issues {
+                display:flex;
+                gap:10px;
+                align-items:center;
+                padding:10px 12px;
+                border:1px solid var(--tms-border);
+                border-radius: var(--tms-card-radius);
+                background: #fff7ed;
+                color:#7c2d12;
+                box-shadow:0 4px 14px rgba(0,0,0,0.04);
+            }
         </style>
     @endpush
 
@@ -62,6 +142,9 @@
         <script>
             const TmsMap = (() => {
                 let loads = @json($loads);
+                const dispatcherOptions = @json($dispatchers);
+                const currentUserId = {{ auth()->id() ?? 'null' }};
+                const currentUserName = @json(optional(auth()->user())->name);
                 const statusColorMap = {
                     draft: '#6b7280',
                     posted: '#f59e0b',
@@ -95,6 +178,14 @@
                 let currentFiltered = loads;
                 let loadIndex = {};
                 let selectedLoadId = null;
+                let connectionMode = 'polling';
+                let geoMarker = null;
+                let savedViews = [];
+                let areaBounds = null;
+                let areaRect = null;
+                let areaSelecting = false;
+                let areaStart = null;
+                let cityLabelLayer = null;
 
                 let booted = false;
 
@@ -122,13 +213,28 @@
                             window.Echo.private('tms-loads').listen('.MapUpdated', () => {
                                 fetchLatest(true);
                             });
+                            setConnectionMode('realtime');
                         } else if (window.Echo && typeof window.Echo.channel === 'function') {
                             window.Echo.channel('tms-loads').listen('.MapUpdated', () => {
                                 fetchLatest(true);
                             });
+                            setConnectionMode('realtime');
                         }
+                        const conn = window.Echo?.connector?.pusher?.connection;
+                        conn?.bind('error', () => setMapAlert('Realtime connection lost. Falling back to polling.', 'error'));
+                        conn?.bind('state_change', (s) => {
+                            if (s.current !== 'connected') setMapAlert(`Realtime: ${s.current}`, 'error');
+                        });
                     } catch (e) {
                         // ignore
+                    }
+                };
+
+                const setStatusFilter = (statusValue) => {
+                    const statusEl = document.getElementById('tms-status-filter');
+                    if (statusEl) {
+                        statusEl.value = statusValue;
+                        applyFilters();
                     }
                 };
 
@@ -343,8 +449,149 @@
                             refreshData(data.loads, forceFit);
                         }
                     } catch (e) {
-                        // silent fail
+                        setMapAlert('Could not refresh map data.', 'error');
                     }
+                };
+
+                const copyCoords = async (coords) => {
+                    if (!coords) return;
+                    const text = `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`;
+                    try {
+                        if (navigator.clipboard?.writeText) {
+                            await navigator.clipboard.writeText(text);
+                            setMapAlert(`Copied ${text}`);
+                        } else {
+                            setMapAlert(text);
+                        }
+                    } catch (_) {
+                        setMapAlert(text);
+                    }
+                };
+
+                const parseLatLng = (text) => {
+                    if (!text) return null;
+                    const parts = text.split(',').map((p) => p.trim());
+                    if (parts.length === 2) {
+                        const lat = parseFloat(parts[0]);
+                        const lng = parseFloat(parts[1]);
+                        if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
+                    }
+                    return null;
+                };
+
+                const searchLocation = async () => {
+                    const query = document.getElementById('tms-location-query')?.value?.trim();
+                    const m = ensureMap();
+                    if (!m || !query) return;
+                    const direct = parseLatLng(query);
+                    if (direct) {
+                        m.setView(direct, 10);
+                        copyCoords(direct);
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`, {
+                            headers: { 'Accept': 'application/json' },
+                        });
+                        const data = await res.json();
+                        const hit = data?.[0];
+                        if (hit?.lat && hit?.lon) {
+                            const coords = [parseFloat(hit.lat), parseFloat(hit.lon)];
+                            m.setView(coords, 10);
+                            copyCoords(coords);
+                        } else {
+                            setMapAlert('No results for that query.', 'error');
+                        }
+                    } catch (e) {
+                        setMapAlert('Search failed.', 'error');
+                    }
+                };
+
+                const loadSavedViews = () => {
+                    try {
+                        savedViews = JSON.parse(localStorage.getItem('tmsSavedViews') || '[]');
+                    } catch (_) {
+                        savedViews = [];
+                    }
+                    const select = document.getElementById('tms-bookmark-select');
+                    if (!select) return;
+                    select.innerHTML = '<option value=\"\">Saved views</option>';
+                    savedViews.forEach((view) => {
+                        const opt = document.createElement('option');
+                        opt.value = view.name;
+                        opt.textContent = view.name;
+                        select.appendChild(opt);
+                    });
+                };
+
+                const saveCurrentView = () => {
+                    const name = document.getElementById('tms-bookmark-name')?.value?.trim();
+                    const m = ensureMap();
+                    if (!m || !name) return;
+                    const center = m.getCenter();
+                    const zoom = m.getZoom();
+                    const existingIndex = savedViews.findIndex((v) => v.name === name);
+                    const view = { name, lat: center.lat, lng: center.lng, zoom };
+                    if (existingIndex >= 0) {
+                        savedViews[existingIndex] = view;
+                    } else {
+                        savedViews.push(view);
+                    }
+                    localStorage.setItem('tmsSavedViews', JSON.stringify(savedViews));
+                    loadSavedViews();
+                    setMapAlert(`Saved view "${name}"`);
+                };
+
+                const applySavedView = () => {
+                    const select = document.getElementById('tms-bookmark-select');
+                    const name = select?.value;
+                    if (!name) return;
+                    const view = savedViews.find((v) => v.name === name);
+                    const m = ensureMap();
+                    if (!m || !view) return;
+                    m.setView([view.lat, view.lng], view.zoom);
+                    setMapAlert(`Loaded view "${name}"`);
+                };
+
+                const deleteSavedView = () => {
+                    const select = document.getElementById('tms-bookmark-select');
+                    const name = select?.value;
+                    if (!name) return;
+                    savedViews = savedViews.filter((v) => v.name !== name);
+                    localStorage.setItem('tmsSavedViews', JSON.stringify(savedViews));
+                    loadSavedViews();
+                    setMapAlert(`Deleted view "${name}"`);
+                };
+
+                const assignDispatcher = async (loadId, dispatcherId) => {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                    await fetch('/admin/tms-assign-dispatcher', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ load_id: loadId, dispatcher_id: dispatcherId }),
+                    });
+                    fetchLatest(true);
+                };
+
+                const logCheckCall = async (loadId) => {
+                    const status = prompt('Enter status (dispatched, en_route, arrived_pickup, loaded, arrived_delivery, unloaded, delayed, issue, check_call):', 'check_call');
+                    if (!status) return;
+                    const note = prompt('Note (optional):', '');
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                    await fetch('/admin/tms-check-call', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ load_id: loadId, status, note }),
+                    });
+                    fetchLatest(true);
                 };
 
                 const ensureMap = () => {
@@ -366,6 +613,10 @@
                             attribution: 'Map tiles by Stamen Design, CC BY 3.0 — Map data © OpenStreetMap',
                             subdomains: 'abcd',
                         }),
+                        'Streets (Esri)': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                            maxZoom: 19,
+                            attribution: 'Source: Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors',
+                        }),
                     };
                     map = L.map(mapEl, {
                         center: [39.5, -98.35],
@@ -374,7 +625,12 @@
                     });
                     L.control.layers(baseLayers, {}).addTo(map);
                     Object.values(poiLayers).forEach((layer) => layer.addTo(map));
+                    cityLabelLayer = L.layerGroup().addTo(map);
                     map.on('moveend', throttle(fetchPoisForView, 1500));
+                    map.on('click', (e) => {
+                        const { lat, lng } = e.latlng;
+                        copyCoords([lat, lng]);
+                    });
                     document.getElementById('tms-poi-refresh')?.addEventListener('click', () => {
                         lastPoiFetchBounds = null;
                         fetchPoisForView();
@@ -383,12 +639,16 @@
                 };
 
                 const clearLayers = () => {
-                    Object.values(layerStore).forEach(({ polyline, stopMarkers = [], truckMarker }) => {
+                    Object.values(layerStore).forEach(({ polyline, stopMarkers = [], truckMarker, labelMarker, startMarker, endMarker }) => {
                         if (polyline) polyline.remove();
                         stopMarkers.forEach((m) => m.remove());
                         if (truckMarker) truckMarker.remove();
+                        if (labelMarker) labelMarker.remove();
+                        if (startMarker) startMarker.remove();
+                        if (endMarker) endMarker.remove();
                     });
                     layerStore = {};
+                    cityLabelLayer?.clearLayers();
                 };
 
                 const renderLayers = (filtered) => {
@@ -413,6 +673,7 @@
                                 fillOpacity: 0.7,
                             }).addTo(m);
 
+                            const labelText = [stop.city, stop.state].filter(Boolean).join(', ') || (stop.type ? stop.type.toUpperCase() : 'Stop');
                             const popupDetails = [
                                 `<strong>${load.load_number}</strong>`,
                                 load.lane || '',
@@ -432,6 +693,7 @@
                                 .filter(Boolean)
                                 .join('<br/>');
                             marker.bindPopup(popupDetails);
+                            marker.bindTooltip(labelText, { permanent: true, direction: 'top', className: 'tms-stop-label' });
                             marker.on('mouseover', () => highlightLoad(load.id, true));
                             marker.on('mouseout', () => highlightLoad(load.id, false));
                             bounds.extend(stop.coords);
@@ -493,10 +755,57 @@
                             bounds.extend(load.truck_position);
                         }
 
+                        // SLA label placed near route center
+                        let labelMarker = null;
+                        const labelCoords = polyline?.getBounds()?.getCenter() || (stopPoints[Math.floor(stopPoints.length / 2)]?.coords);
+                        const status = load.route_status || 'on_time';
+                        const statusColor = status === 'late' ? '#ef4444' : status === 'at_risk' ? '#f59e0b' : '#10b981';
+                        const statusText = status === 'late' ? 'Late' : status === 'at_risk' ? 'At risk' : 'On time';
+                        if (labelCoords) {
+                            labelMarker = L.marker(labelCoords, {
+                                icon: L.divIcon({
+                                    className: 'tms-sla-label',
+                                    html: `<span style="border-color:${statusColor};color:${statusColor}">${statusText}</span>`,
+                                }),
+                                interactive: false,
+                            }).addTo(m);
+                        }
+
+                        // Explicit start/end markers
+                        let startMarker = null;
+                        let endMarker = null;
+                        if (stopPoints.length) {
+                            const first = stopPoints[0];
+                            const last = stopPoints[stopPoints.length - 1];
+                            if (first?.coords) {
+                                const txt = ['Start', [first.city, first.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+                                startMarker = L.marker(first.coords, {
+                                    icon: L.divIcon({
+                                        className: 'tms-sla-label',
+                                        html: `<span style="background:#ecfdf3;border-color:#bbf7d0;color:#065f46">${txt}</span>`,
+                                    }),
+                                    interactive: false,
+                                }).addTo(m);
+                            }
+                            if (last?.coords) {
+                                const txt = ['Drop', [last.city, last.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+                                endMarker = L.marker(last.coords, {
+                                    icon: L.divIcon({
+                                        className: 'tms-sla-label',
+                                        html: `<span style="background:#fff1f2;border-color:#fecdd3;color:#b91c1c">${txt}</span>`,
+                                    }),
+                                    interactive: false,
+                                }).addTo(m);
+                            }
+                        }
+
                         layerStore[load.id] = {
                             polyline,
                             stopMarkers,
                             truckMarker,
+                            labelMarker,
+                            startMarker,
+                            endMarker,
                             bounds: coordsList.length ? L.latLngBounds(coordsList) : null,
                         };
                     });
@@ -536,6 +845,45 @@
                     if (marker) marker.openPopup();
                 };
 
+                const fitTrucks = () => {
+                    const m = ensureMap();
+                    if (!m) return;
+                    const b = L.latLngBounds();
+                    Object.values(layerStore).forEach(({ truckMarker }) => {
+                        if (truckMarker) b.extend(truckMarker.getLatLng());
+                    });
+                    if (b.isValid()) {
+                        m.fitBounds(b.pad(0.2));
+                    } else {
+                        setMapAlert('No truck positions yet.');
+                    }
+                };
+
+                const locateMe = () => {
+                    const m = ensureMap();
+                    if (!m || !navigator.geolocation) {
+                        setMapAlert('Geolocation not available.');
+                        return;
+                    }
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            const coords = [pos.coords.latitude, pos.coords.longitude];
+                            if (geoMarker) geoMarker.remove();
+                            geoMarker = L.marker(coords, {
+                                icon: L.divIcon({
+                                    className: 'tms-sla-label',
+                                    html: `<span style="background:#e0f2fe;border-color:#93c5fd;color:#075985">You</span>`,
+                                }),
+                                interactive: false,
+                            }).addTo(m);
+                            m.setView(coords, 10);
+                            setMapAlert('Centered on your location.');
+                        },
+                        () => setMapAlert('Unable to fetch your location.', 'error'),
+                        { enableHighAccuracy: false, timeout: 5000 }
+                    );
+                };
+
                 const applyFilters = () => {
                     const status = document.getElementById('tms-status-filter')?.value || '';
                     const search = (document.getElementById('tms-search')?.value || '').toLowerCase().trim();
@@ -543,11 +891,16 @@
                     const driver = document.getElementById('tms-driver-filter')?.value || '';
                     const dateStart = document.getElementById('tms-date-start')?.value || '';
                     const dateEnd = document.getElementById('tms-date-end')?.value || '';
+                    const noDispatcher = document.getElementById('tms-no-dispatcher')?.checked;
+                    const noCcHrs = parseInt(document.getElementById('tms-no-cc-hrs')?.value || '0', 10);
+                    const slaSoon = document.getElementById('tms-sla-soon')?.checked;
 
                     const filtered = loads.filter((load) => {
                         if (status && load.status !== status) return false;
-                        if (dispatcher && load.dispatcher !== dispatcher) return false;
+                        if (dispatcher && String(load.dispatcher_id || '') !== dispatcher) return false;
                         if (driver && load.driver !== driver) return false;
+                        if (noDispatcher && load.dispatcher) return false;
+                        if (areaBounds && !isInArea(load)) return false;
 
                         if (dateStart) {
                             const loadEnd = load.end_date || load.start_date;
@@ -571,12 +924,29 @@
                                 .toLowerCase();
                             if (!haystack.includes(search)) return false;
                         }
+                        if (noCcHrs && noCcHrs > 0) {
+                            const last = load.last_event_time ? new Date(load.last_event_time) : null;
+                            const cutoff = new Date();
+                            cutoff.setHours(cutoff.getHours() - noCcHrs);
+                            if (last && last > cutoff) return false;
+                            // if no last, treat as stale -> keep
+                        }
+                        if (slaSoon) {
+                            const end = load.end_date ? new Date(load.end_date) : null;
+                            if (!end) return false;
+                            const now = new Date();
+                            const soon = new Date();
+                            soon.setHours(soon.getHours() + 24);
+                            if (end < now || end > soon) return false;
+                        }
                         return true;
                     });
 
                     currentFiltered = filtered;
                     renderLayers(filtered);
+                    renderCityLabels(filtered);
                     filterList({ status, search, dispatcher, driver, dateStart, dateEnd });
+                    updateStats(filtered.length);
                 };
 
                 const filterList = ({ status, search, dispatcher, driver, dateStart, dateEnd }) => {
@@ -595,8 +965,103 @@
                         if (dateStart && cardEnd && cardEnd < dateStart) ok = false;
                         if (dateEnd && cardStart && cardStart > dateEnd) ok = false;
                         if (search && !haystack.includes(search)) ok = false;
+                        if (areaBounds) {
+                            const load = loadIndex[card.dataset.loadId];
+                            if (!isInArea(load)) ok = false;
+                        }
+                        if (document.getElementById('tms-no-dispatcher')?.checked && cardDispatcher) ok = false;
+                        const hrs = parseInt(document.getElementById('tms-no-cc-hrs')?.value || '0', 10);
+                        if (hrs && hrs > 0) {
+                            const load = loadIndex[card.dataset.loadId];
+                            const last = load?.last_event_time ? new Date(load.last_event_time) : null;
+                            const cutoff = new Date();
+                            cutoff.setHours(cutoff.getHours() - hrs);
+                            if (last && last > cutoff) ok = false;
+                        }
+                        if (document.getElementById('tms-sla-soon')?.checked) {
+                            const load = loadIndex[card.dataset.loadId];
+                            const end = load?.end_date ? new Date(load.end_date) : null;
+                            if (!end) ok = false;
+                            const now = new Date();
+                            const soon = new Date();
+                            soon.setHours(soon.getHours() + 24);
+                            if (end && (end < now || end > soon)) ok = false;
+                        }
 
                         card.classList.toggle('hidden', !ok);
+                    });
+                };
+
+                const updateStats = (filteredCount) => {
+                    const total = loads.length;
+                    const atRisk = loads.filter((l) => l.route_status === 'at_risk').length;
+                    const late = loads.filter((l) => l.route_status === 'late').length;
+                    const inTransit = loads.filter((l) => l.status === 'in_transit').length;
+                    const text = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = value;
+                    };
+                    text('tms-stat-total', `Total: ${total}`);
+                    text('tms-stat-at-risk', `At risk: ${atRisk}`);
+                    text('tms-stat-late', `Late: ${late}`);
+                    text('tms-stat-intransit', `In transit: ${inTransit}`);
+                    text('tms-stat-filtered', `Filtered: ${filteredCount}`);
+                    text('tms-issues-late', `Late: ${late}`);
+                    text('tms-issues-atrisk', `At risk: ${atRisk}`);
+                    const upd = document.getElementById('tms-updated-at');
+                    if (upd) upd.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                };
+
+                const setConnectionMode = (mode) => {
+                    connectionMode = mode;
+                    const el = document.getElementById('tms-conn-chip');
+                    if (!el) return;
+                    el.textContent = mode === 'realtime' ? 'Mode: realtime' : 'Mode: polling';
+                    el.classList.remove('good', 'muted');
+                    el.classList.add(mode === 'realtime' ? 'good' : 'muted');
+                };
+
+                const isInArea = (load) => {
+                    if (!areaBounds || !load) return true;
+                    const stops = load.stops || [];
+                    const anyStop = stops.some((s) => s.coords && areaBounds.contains(L.latLng(s.coords[0], s.coords[1])));
+                    const truck = load.truck_position && areaBounds.contains(L.latLng(load.truck_position[0], load.truck_position[1]));
+                    return anyStop || truck;
+                };
+
+                const jumpToIssue = (status) => {
+                    const target = currentFiltered.find((l) => l.route_status === status);
+                    if (!target) {
+                        setMapAlert(`No ${status === 'late' ? 'late' : 'at risk'} loads right now.`);
+                        return;
+                    }
+                    focusLoad(target.id);
+                    const card = document.querySelector(`.tms-load-card[data-load-id="${target.id}"]`);
+                    if (card) {
+                        document.querySelectorAll('.tms-load-card').forEach((c) => c.classList.remove('tms-highlight'));
+                        card.classList.add('tms-highlight');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                };
+
+                const renderCityLabels = (filtered) => {
+                    if (!cityLabelLayer) return;
+                    cityLabelLayer.clearLayers();
+                    const seen = new Set();
+                    filtered.forEach((load) => {
+                        (load.stops || []).forEach((stop) => {
+                            if (!stop.coords || !stop.city) return;
+                            const key = `${stop.city},${stop.state || ''}`.toLowerCase();
+                            if (seen.has(key)) return;
+                            seen.add(key);
+                            cityLabelLayer.addLayer(L.marker(stop.coords, {
+                                icon: L.divIcon({
+                                    className: 'tms-city-label',
+                                    html: `<span>${stop.city}${stop.state ? ', ' + stop.state : ''}</span>`,
+                                }),
+                                interactive: false,
+                            }));
+                        });
                     });
                 };
 
@@ -628,6 +1093,23 @@
                     const poiFuelEl = document.getElementById('tms-poi-fuel');
                     const poiServiceEl = document.getElementById('tms-poi-service');
                     const poiLodgingEl = document.getElementById('tms-poi-lodging');
+                    const lateEl = document.getElementById('tms-late-only');
+                    const atRiskEl = document.getElementById('tms-atrisk-only');
+                    const showAllEl = document.getElementById('tms-show-all');
+                    const fitTrucksEl = document.getElementById('tms-fit-trucks');
+                    const locateEl = document.getElementById('tms-locate');
+                    const locationSearchEl = document.getElementById('tms-location-search');
+                    const locationQueryEl = document.getElementById('tms-location-query');
+                    const bookmarkSaveEl = document.getElementById('tms-bookmark-save');
+                    const bookmarkLoadEl = document.getElementById('tms-bookmark-load');
+                    const bookmarkDeleteEl = document.getElementById('tms-bookmark-delete');
+                    const areaSelectEl = document.getElementById('tms-area-select');
+                    const areaClearEl = document.getElementById('tms-area-clear');
+                    const jumpLateEl = document.getElementById('tms-jump-late');
+                    const jumpAtRiskEl = document.getElementById('tms-jump-atrisk');
+                    const noDispatcherEl = document.getElementById('tms-no-dispatcher');
+                    const noCcEl = document.getElementById('tms-no-cc-hrs');
+                    const slaSoonEl = document.getElementById('tms-sla-soon');
 
                     searchEl?.addEventListener('input', () => applyFilters());
                     statusEl?.addEventListener('change', () => applyFilters());
@@ -635,6 +1117,9 @@
                     driverEl?.addEventListener('change', () => applyFilters());
                     dateStartEl?.addEventListener('change', () => applyFilters());
                     dateEndEl?.addEventListener('change', () => applyFilters());
+                    noDispatcherEl?.addEventListener('change', () => applyFilters());
+                    noCcEl?.addEventListener('input', () => applyFilters());
+                    slaSoonEl?.addEventListener('change', () => applyFilters());
                     fitEl?.addEventListener('click', () => fitAll());
                     fitSelectedEl?.addEventListener('click', () => {
                         const selected = document.querySelector('.tms-load-card.tms-highlight');
@@ -654,6 +1139,25 @@
                     poiFuelEl?.addEventListener('change', applyPoiVisibility);
                     poiServiceEl?.addEventListener('change', applyPoiVisibility);
                     poiLodgingEl?.addEventListener('change', applyPoiVisibility);
+                    lateEl?.addEventListener('click', () => setStatusFilter('late'));
+                    atRiskEl?.addEventListener('click', () => setStatusFilter('at_risk'));
+                    showAllEl?.addEventListener('click', () => setStatusFilter(''));
+                    fitTrucksEl?.addEventListener('click', () => fitTrucks());
+                    locateEl?.addEventListener('click', () => locateMe());
+                    locationSearchEl?.addEventListener('click', () => searchLocation());
+                    locationQueryEl?.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            searchLocation();
+                        }
+                    });
+                    bookmarkSaveEl?.addEventListener('click', () => saveCurrentView());
+                    bookmarkLoadEl?.addEventListener('click', () => applySavedView());
+                    bookmarkDeleteEl?.addEventListener('click', () => deleteSavedView());
+                    areaSelectEl?.addEventListener('click', () => startAreaSelection());
+                    areaClearEl?.addEventListener('click', () => clearAreaFilter());
+                    jumpLateEl?.addEventListener('click', () => jumpToIssue('late'));
+                    jumpAtRiskEl?.addEventListener('click', () => jumpToIssue('at_risk'));
 
                     document.querySelectorAll('.tms-load-card').forEach((card) => {
                         card.addEventListener('click', () => {
@@ -664,6 +1168,38 @@
                         });
                         card.addEventListener('mouseenter', () => highlightLoad(card.dataset.loadId, true));
                         card.addEventListener('mouseleave', () => highlightLoad(card.dataset.loadId, false));
+
+                        const assignMeBtn = card.querySelector('[data-assign-me]');
+                        const assignBtn = card.querySelector('[data-assign-selected]');
+                        const unassignBtn = card.querySelector('[data-unassign]');
+                        const ccBtn = card.querySelector('[data-check-call]');
+                        const dispatcherPick = card.querySelector('[data-dispatcher-pick]');
+
+                        assignMeBtn?.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (!currentUserId) {
+                                alert('No current user to assign.');
+                                return;
+                            }
+                            assignDispatcher(card.dataset.loadId, currentUserId);
+                        });
+                        assignBtn?.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const val = dispatcherPick?.value;
+                            if (!val) {
+                                alert('Pick a dispatcher first.');
+                                return;
+                            }
+                            assignDispatcher(card.dataset.loadId, val);
+                        });
+                        unassignBtn?.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            assignDispatcher(card.dataset.loadId, null);
+                        });
+                        ccBtn?.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            logCheckCall(card.dataset.loadId);
+                        });
                     });
                 };
 
@@ -672,10 +1208,12 @@
                     booted = true;
                     queueMicrotask(() => {
                         ensureMap();
+                        loadSavedViews();
                         attachEvents();
                         applyFilters();
                         initEcho();
                         setInterval(() => fetchLatest(), 30000);
+                        setConnectionMode(connectionMode);
                     });
                 };
 
@@ -692,6 +1230,76 @@
                     if (event?.detail?.loads) refreshData(event.detail.loads, true);
                 });
 
+                const startAreaSelection = () => {
+                    const m = ensureMap();
+                    if (!m) return;
+                    if (areaSelecting) return;
+                    areaSelecting = true;
+                    areaStart = null;
+                    setMapAlert('Click and drag to draw an area.');
+                    m.dragging.disable();
+
+                    const onDown = (e) => {
+                        areaStart = e.latlng;
+                        if (areaRect) {
+                            m.removeLayer(areaRect);
+                            areaRect = null;
+                        }
+                    };
+
+                    const onMove = (e) => {
+                        if (!areaStart) return;
+                        const b = L.latLngBounds(areaStart, e.latlng);
+                        if (!areaRect) {
+                            areaRect = L.rectangle(b, { color: '#2563eb', weight: 1, fillOpacity: 0.06 }).addTo(m);
+                        } else {
+                            areaRect.setBounds(b);
+                        }
+                    };
+
+                    const onUp = (e) => {
+                        if (!areaStart) {
+                            cleanup();
+                            return;
+                        }
+                        const b = L.latLngBounds(areaStart, e.latlng);
+                        areaBounds = b;
+                        if (!areaRect) {
+                            areaRect = L.rectangle(b, { color: '#2563eb', weight: 1, fillOpacity: 0.06 }).addTo(m);
+                        }
+                        cleanup();
+                        applyFilters();
+                        setMapAlert('Area filter applied.');
+                    };
+
+                    const cleanup = () => {
+                        areaSelecting = false;
+                        areaStart = null;
+                        m.dragging.enable();
+                        m.off('mousedown', onDown);
+                        m.off('mousemove', onMove);
+                        m.off('mouseup', onUp);
+                    };
+
+                    m.on('mousedown', onDown);
+                    m.on('mousemove', onMove);
+                    m.on('mouseup', onUp);
+                };
+
+                const clearAreaFilter = () => {
+                    const m = ensureMap();
+                    areaBounds = null;
+                    areaSelecting = false;
+                    areaStart = null;
+                    if (areaRect && m) {
+                        m.removeLayer(areaRect);
+                    }
+                    areaRect = null;
+                    if (m) m.dragging.enable();
+                    applyFilters();
+                    setMapAlert('Area filter cleared.');
+                };
+
                 return { boot, refreshData };
             })();
 
@@ -702,23 +1310,9 @@
     @endpush
 @endonce
 
-@php
-    $statusColors = [
-        'draft' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-        'posted' => 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200',
-        'assigned' => 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200',
-        'in_transit' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200',
-        'delivered' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200',
-        'completed' => 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200',
-        'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200',
-    ];
-    $statusOptions = array_keys($statusColors);
-    $dispatchers = collect($loads)->pluck('dispatcher')->filter()->unique()->sort()->values();
-    $drivers = collect($loads)->pluck('driver')->filter()->unique()->sort()->values();
-@endphp
-
 <x-filament::page>
-    <div class="space-y-4">
+    <x-filament::section heading="TMS Overview" description="Realtime snapshot for loads, statuses, and legend.">
+        <div class="space-y-4">
         <div class="tms-grid tms-grid-3">
             <div class="tms-card">
                 <div class="text-xs uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Loads</div>
@@ -736,20 +1330,60 @@
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pins/lines use status colors.</div>
             </div>
-            <div class="tms-card">
+            <x-filament::section class="!p-3">
                 <div class="flex items-center justify-between">
                     <div class="text-xs uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Legend</div>
-                    <span class="tms-legend-toggle" data-target="tms-legend-body">Toggle</span>
+                    <button type="button" class="tms-legend-toggle text-xs text-primary" data-target="tms-legend-body">Hide/Show</button>
                 </div>
-                <div id="tms-legend-body" class="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-300">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sky-500 inline-block"></span> Stops</div>
-                    <div class="flex items-center gap-2"><span class="w-4 h-[2px] bg-emerald-600 inline-block"></span> Lane polyline</div>
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white shadow"></span> Truck position</div>
+                <div id="tms-legend-body" class="mt-2 space-y-2 text-xs text-gray-600 dark:text-gray-300">
+                    <div class="flex items-start gap-2">
+                        <span class="w-3 h-3 rounded-full bg-sky-500 inline-block mt-0.5"></span>
+                        <div>
+                            <div class="font-semibold">Stops</div>
+                            <div class="text-[11px] text-gray-500">Pickup and delivery pins; hover for city/state.</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="w-4 h-[2px] bg-emerald-600 inline-block mt-2"></span>
+                        <div>
+                            <div class="font-semibold">Lane polyline</div>
+                            <div class="text-[11px] text-gray-500">Planned route between first and last stops.</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white shadow mt-0.5"></span>
+                        <div>
+                            <div class="font-semibold">Truck position</div>
+                            <div class="text-[11px] text-gray-500">Approximate truck location based on status.</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </x-filament::section>
         </div>
 
-        <div class="tms-filter-bar">
+        <div class="tms-status-bar">
+            <span class="tms-chip good" id="tms-stat-total">Total: {{ count($loads) }}</span>
+            <span class="tms-chip warn" id="tms-stat-at-risk">At risk: 0</span>
+            <span class="tms-chip bad" id="tms-stat-late">Late: 0</span>
+            <span class="tms-chip muted" id="tms-stat-intransit">In transit: 0</span>
+            <span class="tms-chip muted" id="tms-stat-filtered">Filtered: {{ count($loads) }}</span>
+            <span class="tms-chip muted" id="tms-conn-chip">Mode: polling</span>
+            <span class="text-xs text-gray-500" id="tms-updated-at">Last updated: just now</span>
+        </div>
+
+        <div class="tms-issues">
+            <span class="font-semibold text-sm">Top issues</span>
+            <span id="tms-issues-late">Late: 0</span>
+            <x-filament::icon-button id="tms-jump-late" icon="heroicon-m-arrow-down-circle" size="sm" label="Jump to late" />
+            <span id="tms-issues-atrisk">At risk: 0</span>
+            <x-filament::icon-button id="tms-jump-atrisk" icon="heroicon-m-exclamation-circle" size="sm" label="Jump to at risk" color="warning" />
+        </div>
+
+        </div>
+    </x-filament::section>
+
+    <x-filament::section heading="Filters & Tools" description="Narrow loads, manage POIs, and apply quick actions.">
+        <div class="tms-filter-bar space-y-2">
             <div class="flex flex-wrap gap-2 items-center">
                 <label class="text-xs text-gray-500 dark:text-gray-400">Status</label>
                 <select id="tms-status-filter" class="rounded-lg border px-2 py-1 text-sm bg-white dark:bg-slate-800">
@@ -762,7 +1396,7 @@
                 <select id="tms-dispatcher-filter" class="rounded-lg border px-2 py-1 text-sm bg-white dark:bg-slate-800">
                     <option value="">All</option>
                     @foreach ($dispatchers as $dispatcher)
-                        <option value="{{ $dispatcher }}">{{ $dispatcher }}</option>
+                        <option value="{{ $dispatcher['id'] }}">{{ $dispatcher['name'] }}</option>
                     @endforeach
                 </select>
                 <label class="text-xs text-gray-500 dark:text-gray-400 ml-2">Driver</label>
@@ -778,28 +1412,69 @@
                 <input id="tms-date-start" type="date" class="rounded-lg border px-3 py-1 text-sm bg-white dark:bg-slate-800">
                 <label class="text-xs text-gray-500 dark:text-gray-400 ml-2">to</label>
                 <input id="tms-date-end" type="date" class="rounded-lg border px-3 py-1 text-sm bg-white dark:bg-slate-800">
-                <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300 ml-2">
-                    <input type="checkbox" id="tms-poi-fuel" class="rounded border-gray-300" checked> Fuel
-                </label>
-                <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
-                    <input type="checkbox" id="tms-poi-service" class="rounded border-gray-300" checked> Service
-                </label>
-                <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
-                    <input type="checkbox" id="tms-poi-lodging" class="rounded border-gray-300" checked> Lodging
-                </label>
-                <button id="tms-poi-refresh" type="button" class="tms-btn" title="Refresh POIs">Refresh POIs</button>
-                <span class="text-[11px] text-gray-500">Zoom to 4+ to fetch POIs</span>
             </div>
-            <div class="flex gap-2" style="margin-left:auto;">
-                <button id="tms-clear-selection" type="button" class="tms-btn">Clear selection</button>
-                <button id="tms-fit-selected" type="button" class="tms-btn">Fit selected</button>
-                <button id="tms-fit-all" type="button" class="tms-btn">Fit all</button>
-                <button id="tms-refresh" type="button" class="tms-btn tms-btn-primary">Refresh map</button>
-                <button id="tms-export" type="button" class="tms-btn">Export CSV</button>
-                <button id="tms-print" type="button" class="tms-btn">Print</button>
+
+            <details class="w-full bg-white dark:bg-slate-900 rounded-lg border px-3 py-2">
+                <summary class="cursor-pointer text-xs text-gray-600 dark:text-gray-300">Advanced filters & tools</summary>
+                <div class="flex flex-wrap gap-2 items-center mt-2">
+                    <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
+                        <input type="checkbox" id="tms-poi-fuel" class="rounded border-gray-300" checked> Fuel
+                    </label>
+                    <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
+                        <input type="checkbox" id="tms-poi-service" class="rounded border-gray-300" checked> Service
+                    </label>
+                    <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
+                        <input type="checkbox" id="tms-poi-lodging" class="rounded border-gray-300" checked> Lodging
+                    </label>
+                    <button id="tms-poi-refresh" type="button" class="tms-btn" title="Refresh POIs">Refresh POIs</button>
+                    <span class="text-[11px] text-gray-500">Zoom to 4+ to fetch POIs</span>
+                    <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300 ml-2">
+                        <input type="checkbox" id="tms-no-dispatcher" class="rounded border-gray-300"> Unassigned dispatcher
+                    </label>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 ml-2">No check-call (hrs)</label>
+                    <input id="tms-no-cc-hrs" type="number" min="1" step="1" class="rounded-lg border px-3 py-1 text-sm bg-white dark:bg-slate-800 w-20" placeholder="24">
+                    <label class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300 ml-2">
+                        <input type="checkbox" id="tms-sla-soon" class="rounded border-gray-300"> Window within 24h
+                    </label>
+                    <div class="flex flex-wrap gap-2 ml-auto">
+                        <button id="tms-late-only" type="button" class="tms-btn">Late</button>
+                        <button id="tms-atrisk-only" type="button" class="tms-btn">At risk</button>
+                        <button id="tms-show-all" type="button" class="tms-btn">All</button>
+                    </div>
+                </div>
+            </details>
+
+            <div class="flex flex-wrap gap-2 items-center w-full">
+                <label class="text-xs text-gray-500 dark:text-gray-400">Jump to</label>
+                <input id="tms-location-query" type="text" class="rounded-lg border px-3 py-1 text-sm bg-white dark:bg-slate-800" placeholder="City, address, or lat,lng">
+                <x-filament::icon-button id="tms-location-search" icon="heroicon-m-magnifying-glass" size="sm" label="Go" />
+                <label class="text-xs text-gray-500 dark:text-gray-400 ml-4">Bookmark view</label>
+                <input id="tms-bookmark-name" type="text" class="rounded-lg border px-3 py-1 text-sm bg-white dark:bg-slate-800" placeholder="Name">
+                <x-filament::icon-button id="tms-bookmark-save" icon="heroicon-m-bookmark" size="sm" label="Save view" />
+                <select id="tms-bookmark-select" class="rounded-lg border px-2 py-1 text-sm bg-white dark:bg-slate-800">
+                    <option value="">Saved views</option>
+                </select>
+                <x-filament::icon-button id="tms-bookmark-load" icon="heroicon-m-play" size="sm" label="Load" />
+                <x-filament::icon-button id="tms-bookmark-delete" icon="heroicon-m-trash" size="sm" color="danger" label="Delete" />
+            </div>
+
+            <div class="flex gap-2 flex-wrap w-full">
+                <x-filament::icon-button id="tms-fit-trucks" icon="heroicon-m-arrows-pointing-out" size="sm" label="Fit trucks" />
+                <x-filament::icon-button id="tms-locate" icon="heroicon-m-map-pin" size="sm" label="Locate me" />
+                <x-filament::icon-button id="tms-area-select" icon="heroicon-m-rectangle-group" size="sm" label="Area select" />
+                <x-filament::icon-button id="tms-area-clear" icon="heroicon-m-x-mark" size="sm" label="Clear area" color="gray" />
+                <x-filament::icon-button id="tms-clear-selection" icon="heroicon-m-backspace" size="sm" label="Clear selection" color="gray" />
+                <x-filament::icon-button id="tms-fit-selected" icon="heroicon-m-arrows-pointing-out" size="sm" label="Fit selected" />
+                <x-filament::icon-button id="tms-fit-all" icon="heroicon-m-arrows-pointing-out" size="sm" label="Fit all" />
+                <x-filament::icon-button id="tms-refresh" icon="heroicon-m-arrow-path" size="sm" color="primary" label="Refresh map" />
+                <x-filament::icon-button id="tms-export" icon="heroicon-m-arrow-down-tray" size="sm" label="Export CSV" />
+                <x-filament::icon-button id="tms-print" icon="heroicon-m-printer" size="sm" label="Print" />
             </div>
         </div>
 
+    </x-filament::section>
+
+    <x-filament::section heading="Map & Loads" description="Select a load to focus and manage dispatch actions.">
         <div class="tms-split">
             <div class="tms-card overflow-hidden">
                 <div class="border-b px-4 py-3 flex items-center justify-between">
@@ -836,7 +1511,7 @@
                                 data-load-id="{{ $load['id'] }}"
                                 data-status="{{ $load['status'] }}"
                                 data-search="{{ $searchHaystack }}"
-                                data-dispatcher="{{ $load['dispatcher'] ?? '' }}"
+                                data-dispatcher="{{ $load['dispatcher_id'] ?? '' }}"
                                 data-driver="{{ $load['driver'] ?? '' }}"
                                 data-start="{{ $load['start_date'] ?? '' }}"
                                 data-end="{{ $load['end_date'] ?? '' }}"
@@ -915,6 +1590,18 @@
                                         <a href="{{ $load['edit_url'] }}" target="_blank" rel="noreferrer" class="text-xs text-primary">Open load ↗</a>
                                     </div>
                                 @endif
+                                <div class="flex flex-wrap gap-2 items-center text-[11px] mt-2">
+                                    <select class="tms-mini-select" data-dispatcher-pick>
+                                        <option value="">Pick dispatcher</option>
+                                        @foreach ($dispatchers as $dispatcher)
+                                            <option value="{{ $dispatcher['id'] }}">{{ $dispatcher['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button class="tms-mini-btn" data-assign-me>Assign me</button>
+                                    <button class="tms-mini-btn" data-assign-selected>Assign</button>
+                                    <button class="tms-mini-btn" data-unassign>Unassign</button>
+                                    <button class="tms-mini-btn" data-check-call>Log check-call</button>
+                                </div>
                             </div>
                         @empty
                             <div class="text-sm text-gray-500">No loads available for map view.</div>
@@ -923,5 +1610,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    </x-filament::section>
 </x-filament::page>

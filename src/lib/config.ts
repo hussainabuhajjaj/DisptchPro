@@ -1,5 +1,6 @@
 const isProd = process.env.NODE_ENV === "production";
-const defaultBase = isProd ? "" : "http://127.0.0.1:8000/api";
+// Default API base: in prod point to live host, in dev fallback to local backend.
+const defaultBase = isProd ? "https://hadispatch.com/api" : "http://127.0.0.1:8000/api";
 
 export const apiConfig = {
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || defaultBase,
@@ -7,8 +8,9 @@ export const apiConfig = {
 
 export function assertApiConfig() {
   if (!process.env.NEXT_PUBLIC_API_BASE_URL && isProd) {
-    throw new Error(
-      "NEXT_PUBLIC_API_BASE_URL is not set. Configure it for production so the frontend hits the real API.",
+    // Fall back to defaultBase for production, but warn in logs so it can be explicitly set.
+    console.warn(
+      `NEXT_PUBLIC_API_BASE_URL is not set. Falling back to ${defaultBase}. Set it in your environment to override.`,
     );
   }
 
