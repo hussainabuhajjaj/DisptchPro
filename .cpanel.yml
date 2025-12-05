@@ -2,17 +2,26 @@
 deployment:
   tasks:
     # Paths
-    - export DEPLOY_BACKEND=/home/haroot/laravel
-    - export DEPLOY_FRONTEND=/home/haroot/public_html
+    - export REPO=/home/haroot/repositories/DisptchPro
+    - export BACKEND=$REPO/backend
+    - export PHP=/usr/local/bin/php
+    - export COMPOSER=/opt/cpanel/composer/bin/composer
 
-    # Sync backend (exclude env and cache folders)
-    - /bin/rsync -az --delete --exclude=".env" --exclude="storage/logs/*" --exclude="storage/framework/cache/*" ./backend/ $DEPLOY_BACKEND/
+    # Backend dependencies
+    - cd $BACKEND && $COMPOSER install --no-dev --optimize-autoloader
+
+    # Laravel maintenance & migrations (remove migrate if you prefer manual)
+    - cd $BACKEND && $PHP artisan down || true
+    - cd $BACKEND && $PHP artisan migrate --force
+
+    # Optimize caches
+    - cd $BACKEND && $PHP artisan config:cache
+    - cd $BACKEND && $PHP artisan route:cache
+    - cd $BACKEND && $PHP artisan view:cache
+    - cd $BACKEND && $PHP artisan optimize
 
     # Ensure storage symlink exists
-    - if [ ! -e "$DEPLOY_BACKEND/public/storage" ]; then cd $DEPLOY_BACKEND && /usr/local/bin/php artisan storage:link; fi
+    - if [ ! -e "$BACKEND/public/storage" ]; then cd $BACKEND && $PHP artisan storage:link; fi
 
-    # Sync frontend static export (expects src/out populated from your build)
-    - /bin/rsync -az --delete ./src/out/ $DEPLOY_FRONTEND/
-
-    # Cache Laravel config/routes/views
-    - cd $DEPLOY_BACKEND && /usr/local/bin/php artisan config:cache && /usr/local/bin/php artisan route:cache && /usr/local/bin/php artisan view:cache
+    # Bring app back up
+    - cd $BACKEND && $PHP artisan up
