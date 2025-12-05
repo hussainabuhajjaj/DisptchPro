@@ -1,0 +1,18 @@
+---
+deployment:
+  tasks:
+    # Paths
+    - export DEPLOY_BACKEND=/home/haroot/laravel
+    - export DEPLOY_FRONTEND=/home/haroot/public_html
+
+    # Sync backend (exclude env and cache folders)
+    - /bin/rsync -az --delete --exclude=".env" --exclude="storage/logs/*" --exclude="storage/framework/cache/*" ./backend/ $DEPLOY_BACKEND/
+
+    # Ensure storage symlink exists
+    - if [ ! -e "$DEPLOY_BACKEND/public/storage" ]; then cd $DEPLOY_BACKEND && /usr/local/bin/php artisan storage:link; fi
+
+    # Sync frontend static export (expects src/out populated from your build)
+    - /bin/rsync -az --delete ./src/out/ $DEPLOY_FRONTEND/
+
+    # Cache Laravel config/routes/views
+    - cd $DEPLOY_BACKEND && /usr/local/bin/php artisan config:cache && /usr/local/bin/php artisan route:cache && /usr/local/bin/php artisan view:cache
