@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\LoadApiController;
 use App\Http\Controllers\Api\ClientApiController;
 use App\Http\Controllers\Api\DriverApiController;
+use App\Http\Controllers\Api\LeadCaptureController;
+use App\Http\Controllers\Api\PipelineFlowController;
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -58,3 +60,13 @@ Route::middleware('auth:sanctum')->group(function () {
 // Carrier profile submission (public; ties to authenticated user if present)
 Route::post('carrier-profile', [CarrierProfileController::class, 'store'])
     ->middleware('throttle:20,1');
+
+// Public lead intake (landing -> CRM)
+Route::post('leads', [LeadCaptureController::class, 'store'])
+    ->middleware('throttle:30,1');
+
+// Pipeline graph for FlowForge/visual builder (admin/staff)
+Route::middleware(['auth:sanctum', 'role:admin|staff'])->group(function () {
+    Route::get('pipeline/flow', [PipelineFlowController::class, 'show']);
+    Route::post('pipeline/flow', [PipelineFlowController::class, 'store']);
+});

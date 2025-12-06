@@ -8,6 +8,8 @@ use App\Models\Load;
 use App\Models\LoadStop;
 use App\Models\CheckCall;
 use App\Http\Controllers\DocumentGenerationController;
+use App\Http\Controllers\Api\PipelineFlowController;
+use App\Http\Controllers\LeadKanbanController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -16,6 +18,14 @@ Route::get('/', function () {
 
 Route::get('/lead', [LeadController::class, 'create']);
 Route::post('/lead', [LeadController::class, 'store']);
+
+// Admin pipeline flow (session-auth) for visual builder
+Route::middleware(['web', 'auth', 'role:admin|staff'])->group(function () {
+    Route::get('/admin/api/pipeline/flow', [PipelineFlowController::class, 'show'])->name('admin.pipeline.flow');
+    Route::post('/admin/api/pipeline/flow', [PipelineFlowController::class, 'store'])->name('admin.pipeline.flow.save');
+    Route::get('/admin/api/leads/kanban', [LeadKanbanController::class, 'index'])->name('admin.leads.kanban');
+    Route::patch('/admin/api/leads/{lead}/kanban', [LeadKanbanController::class, 'move'])->name('admin.leads.kanban.move');
+});
 
 // JSON map data for TMS (admin authenticated)
 Route::middleware(['web', 'auth'])->get('/admin/tms-map-data', function () {

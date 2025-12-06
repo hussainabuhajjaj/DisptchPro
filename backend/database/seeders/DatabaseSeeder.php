@@ -15,6 +15,8 @@ use Database\Seeders\DriverSeeder;
 use Database\Seeders\LoadSeeder;
 use Database\Seeders\LoadStopSeeder;
 use Database\Seeders\LoadStressSeeder;
+use Database\Seeders\PipelineStageSeeder;
+use Database\Seeders\LeadSourceSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -34,6 +36,9 @@ class DatabaseSeeder extends Seeder
             TestimonialSeeder::class,
             BookingSeeder::class,
             RoleSeeder::class,
+            PermissionSeeder::class,
+            PipelineStageSeeder::class,
+            LeadSourceSeeder::class,
             ClientSeeder::class,
             CarrierSeeder::class,
             DriverSeeder::class,

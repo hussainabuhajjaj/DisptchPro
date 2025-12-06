@@ -467,7 +467,7 @@ class LoadResource extends Resource
         ];
     }
 
-    protected static function mediaAction(): ?\Filament\Tables\Actions\Action
+    protected static function mediaAction(): ?Filament\Actions\Action
     {
         if (!class_exists(\Hugomyb\FilamentMediaAction\Actions\MediaAction::class)) {
             return null;

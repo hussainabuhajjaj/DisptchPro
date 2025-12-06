@@ -42,7 +42,8 @@ class LoadStop extends Model
 
     public function loadRelation()
     {
-        return $this->belongsTo(Load::class);
+        // Explicitly set the FK so Laravel doesn't assume `load_relation_id`.
+        return $this->belongsTo(Load::class, 'load_id');
     }
 
     public function getActivitylogOptions(): LogOptions
