@@ -8,8 +8,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 
 class User extends Authenticatable
+implements FilamentUser, HasName
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
@@ -46,5 +50,16 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Allow users with admin/staff roles, or the first user as fallback.
+        return $this->hasAnyRole(['admin', 'Super Admin', 'staff']) || $this->id === 1;
+    }
+
+    public function getFilamentName(): string
+    {
+        return $this->name ?? $this->email ?? 'User';
     }
 }
