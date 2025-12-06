@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import swaggerJsdoc from 'swagger-jsdoc';
 
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 export async function GET() {
   const options = {
     definition: {
