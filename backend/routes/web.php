@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
 use App\Http\Controllers\LeadController;
 use App\Filament\Pages\TransportBoard;
 use App\Events\TmsMapUpdated;
@@ -10,21 +11,37 @@ use App\Models\CheckCall;
 use App\Http\Controllers\DocumentGenerationController;
 use App\Http\Controllers\Api\PipelineFlowController;
 use App\Http\Controllers\LeadKanbanController;
+use App\Http\Controllers\Api\MapDataController;
+use App\Http\Controllers\DriverPortalController;
+use App\Http\Middleware\DriverSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Fallback login route to satisfy middleware expecting a named "login" route.
+Route::get('/login', function (): RedirectResponse {
+    return redirect('/driver-panel/login');
+})->name('login');
+
 Route::get('/lead', [LeadController::class, 'create']);
 Route::post('/lead', [LeadController::class, 'store']);
 
+// Driver self-service check-call / doc upload form (public)
+Route::view('/driver/check-call', 'driver.check-call')->name('driver.check-call.form');
+Route::view('/driver/app', 'driver.app')->name('driver.app');
+
+// Driver portal (legacy) removed in favor of Filament driver panel
+
 // Admin pipeline flow (session-auth) for visual builder
-Route::middleware(['web', 'auth', 'role:admin|staff'])->group(function () {
+Route::middleware(['web', \Filament\Http\Middleware\Authenticate::class, 'role:admin|staff'])->group(function () {
     Route::get('/admin/api/pipeline/flow', [PipelineFlowController::class, 'show'])->name('admin.pipeline.flow');
     Route::post('/admin/api/pipeline/flow', [PipelineFlowController::class, 'store'])->name('admin.pipeline.flow.save');
     Route::get('/admin/api/leads/kanban', [LeadKanbanController::class, 'index'])->name('admin.leads.kanban');
     Route::patch('/admin/api/leads/{lead}/kanban', [LeadKanbanController::class, 'move'])->name('admin.leads.kanban.move');
+    Route::get('/admin/map-data', [MapDataController::class, 'index'])->name('admin.map-data');
 });
 
 // JSON map data for TMS (admin authenticated)
@@ -33,6 +50,15 @@ Route::middleware(['web', 'auth'])->get('/admin/tms-map-data', function () {
         'loads' => TransportBoard::mapData(),
     ]);
 })->name('admin.tms-map-data');
+
+// Serve driver OpenAPI spec (YAML)
+Route::get('/openapi.yaml', function () {
+    $path = base_path('docs/driver-api.openapi.yaml');
+    if (!File::exists($path)) {
+        abort(404);
+    }
+    return response(File::get($path), 200, ['Content-Type' => 'application/yaml']);
+})->name('openapi.driver');
 
 // Trigger broadcast of current map data (for manual/push updates)
 Route::middleware(['web', 'auth'])->post('/admin/tms-map-broadcast', function () {

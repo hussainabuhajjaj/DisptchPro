@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('credits:auto-apply')->dailyAt('01:00');
         $schedule->command('loads:detention-calc')->hourly();
+        $schedule->command('notify:carrier-insurance-expiry')->dailyAt('06:00');
+        $schedule->command('sla:check')->hourly();
     }
 
     /**

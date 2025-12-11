@@ -43,15 +43,21 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                // Hero row
+                \App\Filament\Widgets\UsClockWidget::class,
+                \App\Filament\Widgets\KpiStats::class,
+                \App\Filament\Widgets\DispatchKpiWidget::class,
+                \App\Filament\Widgets\LoadsByStatusChart::class,
+                // Compliance & docs
+                \App\Filament\Widgets\ExpiringInsurance::class,
                 \App\Filament\Widgets\CarrierStats::class,
                 \App\Filament\Widgets\DocumentStats::class,
-                \App\Filament\Widgets\KpiStats::class,
-                \App\Filament\Widgets\ExpiringInsurance::class,
-                \App\Filament\Widgets\LoadsByStatusChart::class,
+                // Activity & analytics
                 \App\Filament\Widgets\RecentActivity::class,
                 \App\Filament\Widgets\UmamiEmbed::class,
+                // Utility
+                AccountWidget::class,
+                // FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

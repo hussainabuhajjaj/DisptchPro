@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Load;
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -15,7 +16,7 @@ class LoadFactory extends Factory
         return [
             'load_number' => 'LD-' . Str::upper(Str::random(6)),
             'status' => 'draft',
-            'client_id' => null,
+            'client_id' => Client::factory(),
             'carrier_id' => null,
             'driver_id' => null,
             'truck_id' => null,

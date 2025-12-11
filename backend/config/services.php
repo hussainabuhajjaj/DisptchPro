@@ -28,6 +28,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'safer' => [
+        'base_url' => env('SAFER_BASE_URL', 'https://safer.fmcsa.dot.gov'),
+        'api_key' => env('SAFER_API_KEY'),
+        'timeout' => env('SAFER_TIMEOUT', 10),
+        'web_key' => env('SAFER_WEB_KEY'),
+        'cache_minutes' => env('SAFER_CACHE_MINUTES', 1440),
+    ],
+
     'slack' => [
         'webhook_url' => env('SLACK_WEBHOOK_URL'),
         'notifications' => [

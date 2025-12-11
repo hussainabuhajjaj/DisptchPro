@@ -13,6 +13,8 @@ use App\Models\CheckCall;
 use App\Models\Trailer;
 use App\Models\Truck;
 use App\Models\User;
+use App\Models\BolTemplate;
+use App\Models\Accessorial;
 use Filament\Actions;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Forms\Components\FileUpload;
@@ -34,6 +36,8 @@ use App\Notifications\LoadAlertNotification;
 use Filament\Actions\ActionGroup;
 use Filament\Tables\Actions\EditAction;
 use Filament\Notifications\Notification;
+use App\Filament\Resources\LoadResource\RelationManagers\AccessorialsRelationManager;
+use App\Filament\Resources\LoadResource\RelationManagers\PodsRelationManager;
 
 class LoadResource extends Resource
 {
@@ -89,6 +93,13 @@ class LoadResource extends Resource
                         Forms\Components\Select::make('carrier_id')->label('Carrier')->options(Carrier::query()->pluck('name', 'id'))->searchable(),
                         Forms\Components\Select::make('dispatcher_id')->label('Dispatcher')->options(\App\Models\User::query()->pluck('name', 'id'))->searchable(),
                         Forms\Components\Select::make('driver_id')->label('Driver')->options(Driver::query()->pluck('name', 'id'))->searchable(),
+                        Forms\Components\Select::make('bol_template_id')
+                            ->label('BOL template')
+                            ->options(fn () => BolTemplate::query()->pluck('name', 'id'))
+                            ->searchable()
+                            ->preload(),
+                        Forms\Components\TextInput::make('bol_path')->label('Generated BOL path')->disabled(),
+                        Forms\Components\DateTimePicker::make('bol_generated_at')->label('BOL generated at')->disabled(),
                         Forms\Components\Select::make('truck_id')->label('Truck')->options(Truck::query()->pluck('unit_number', 'id'))->searchable(),
                         Forms\Components\Select::make('trailer_id')->label('Trailer')->options(Trailer::query()->pluck('trailer_number', 'id'))->searchable(),
                         Forms\Components\TextInput::make('trailer_type'),
@@ -112,6 +123,15 @@ class LoadResource extends Resource
                     ]),
                         Forms\Components\KeyValue::make('accessorial_charges')->label('Accessorial charges (JSON)'),
                     ]),
+            Section::make('Tender lifecycle')
+                ->schema([
+                    Grid::make(2)->schema([
+                        Forms\Components\DateTimePicker::make('tendered_at'),
+                        Forms\Components\DateTimePicker::make('carrier_accepted_at'),
+                        Forms\Components\DateTimePicker::make('carrier_rejected_at'),
+                        Forms\Components\DateTimePicker::make('driver_acknowledged_at'),
+                    ]),
+                ]),
             Section::make('Notes & documents')
                 ->schema([
                     Grid::make(2)->schema([
@@ -147,6 +167,43 @@ class LoadResource extends Resource
                 ->color('primary')
                 ->url(fn (Load $record) => route('admin.documents.loads.pdf', ['load' => $record->id, 'type' => 'general', 'template' => 'clean']))
                 ->openUrlInNewTab(),
+            Actions\Action::make('generateBol')
+                ->label('Generate BOL')
+                ->icon('heroicon-o-document-text')
+                ->color('secondary')
+                ->requiresConfirmation()
+                ->action(function (Load $record) {
+                    $url = route('admin.documents.loads.pdf', [
+                        'load' => $record->id,
+                        'type' => 'bol',
+                        'template' => 'bol',
+                    ]);
+                    $record->update([
+                        'bol_generated_at' => now(),
+                        'bol_path' => $url,
+                    ]);
+                    return redirect()->away($url);
+                }),
+            Actions\Action::make('tender')
+                ->label('Tender')
+                ->icon('heroicon-o-paper-airplane')
+                ->visible(fn (Load $record) => !$record->tendered_at)
+                ->action(fn (Load $record) => $record->update(['tendered_at' => now(), 'status' => 'posted'])),
+            Actions\Action::make('carrierAccept')
+                ->label('Carrier Accept')
+                ->icon('heroicon-o-check-circle')
+                ->visible(fn (Load $record) => !$record->carrier_accepted_at)
+                ->action(fn (Load $record) => $record->update(['carrier_accepted_at' => now(), 'status' => 'assigned'])),
+            Actions\Action::make('carrierReject')
+                ->label('Carrier Reject')
+                ->icon('heroicon-o-x-circle')
+                ->visible(fn (Load $record) => !$record->carrier_rejected_at)
+                ->action(fn (Load $record) => $record->update(['carrier_rejected_at' => now(), 'status' => 'posted'])),
+            Actions\Action::make('driverAck')
+                ->label('Driver Ack')
+                ->icon('heroicon-o-user-check')
+                ->visible(fn (Load $record) => !$record->driver_acknowledged_at)
+                ->action(fn (Load $record) => $record->update(['driver_acknowledged_at' => now()])),
             Actions\Action::make('previewPdf')
                 ->label('Preview')
                   ->icon('heroicon-o-eye')
@@ -291,6 +348,23 @@ class LoadResource extends Resource
                     ->state(fn (Load $record) => $record->profit)
                     ->money('usd'),
                 Tables\Columns\TextColumn::make('margin')->suffix('%'),
+                Tables\Columns\TextColumn::make('accessorials_sum')
+                    ->label('Accessorials')
+                    ->state(fn (Load $record) => $record->accessorials()->sum('amount'))
+                    ->money('usd')
+                    ->sortable(false),
+                Tables\Columns\TextColumn::make('accessorials_approved')
+                    ->label('Approved acc.')
+                    ->state(fn (Load $record) => $record->accessorials()->where('status', 'approved')->sum('amount'))
+                    ->money('usd'),
+                Tables\Columns\TextColumn::make('total_with_accessorials')
+                    ->label('Billable total')
+                    ->state(fn (Load $record) => ($record->rate_to_client ?? 0) + ($record->fuel_surcharge ?? 0) + $record->accessorials()->where('status', 'approved')->sum('amount'))
+                    ->money('usd'),
+                Tables\Columns\IconColumn::make('pod_flag')
+                    ->label('POD')
+                    ->boolean()
+                    ->state(fn (Load $record) => !is_null($record->pod_id) || !is_null($record->pod_path)),
                 Tables\Columns\TextColumn::make('checkCalls.status')
                     ->label('Last event')
                     ->state(fn (Load $record) => optional($record->checkCalls()->latest('reported_at')->first())->status)
@@ -455,6 +529,8 @@ class LoadResource extends Resource
             StopsRelationManager::class,
             \App\Filament\Resources\LoadResource\RelationManagers\DocumentsRelationManager::class,
             \App\Filament\Resources\LoadResource\RelationManagers\CheckCallsRelationManager::class,
+            AccessorialsRelationManager::class,
+            PodsRelationManager::class,
         ];
     }
 

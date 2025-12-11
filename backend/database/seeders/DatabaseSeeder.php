@@ -19,6 +19,8 @@ use Database\Seeders\PipelineStageSeeder;
 use Database\Seeders\LeadSourceSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\CrmPipelineSeeder;
+use Database\Seeders\TestLiveMapSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -37,8 +39,8 @@ class DatabaseSeeder extends Seeder
             BookingSeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
-            PipelineStageSeeder::class,
-            LeadSourceSeeder::class,
+            CrmPipelineSeeder::class,
+            TestLiveMapSeeder::class,
             ClientSeeder::class,
             CarrierSeeder::class,
             DriverSeeder::class,

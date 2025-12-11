@@ -15,6 +15,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\IconColumn;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -59,7 +60,23 @@ class DispatchBoardTable extends Component implements HasActions, HasSchemas, Ha
                         'success' => 'on_time',
                     ])
                     ->formatStateUsing(fn (string $state) => str_replace('_', ' ', ucfirst($state)))
+                    ->icon(fn (string $state) => $state === 'late' ? 'heroicon-o-exclamation-triangle' : ($state === 'at_risk' ? 'heroicon-o-clock' : 'heroicon-o-check-circle'))
                     ->sortable(),
+                IconColumn::make('conflict')
+                    ->label('Conflict')
+                    ->boolean()
+                    ->state(fn (Load $record) => $this->hasDriverConflict($record))
+                    ->trueIcon('heroicon-o-exclamation-triangle')
+                    ->falseIcon('heroicon-o-check-circle')
+                    ->tooltip(fn (Load $record) => $this->hasDriverConflict($record) ? 'Driver has overlapping active load' : 'No conflict'),
+                IconColumn::make('no_recent_check_call')
+                    ->label('Check-call')
+                    ->boolean()
+                    ->state(fn (Load $record) => $this->noRecentCheckCall($record))
+                    ->trueIcon('heroicon-o-exclamation-circle')
+                    ->falseIcon('heroicon-o-check-circle')
+                    ->tooltip(fn (Load $record) => $this->noRecentCheckCall($record) ? 'No check-call in 12h' : 'Recent check-call'),
+                \App\Livewire\LoadEtaColumn::make(),
                 TextColumn::make('dispatcher.name')
                     ->label('Dispatcher')
                     ->placeholder('—')
@@ -92,9 +109,27 @@ class DispatchBoardTable extends Component implements HasActions, HasSchemas, Ha
                     ->label('Last event')
                     ->state(fn (Load $record) => optional($record->checkCalls()->latest('reported_at')->first())->reported_at)
                     ->dateTime()
+                    ->description(fn (Load $record) => $this->lastCheckCallAgo($record))
                     ->sortable(),
             ])
             ->filters([
+                Filter::make('no_recent_check_call')
+                    ->label('No check-call in 12h')
+                    ->query(fn ($query) => $query->whereDoesntHave('checkCalls', function ($q) {
+                        $q->where('reported_at', '>=', now()->subHours(12));
+                    })),
+                Filter::make('unassigned')
+                    ->label('Unassigned (carrier or driver)')
+                    ->query(fn ($query) => $query->where(function ($q) {
+                        $q->whereNull('carrier_id')->orWhereNull('driver_id');
+                    })),
+                Filter::make('conflicts_only')
+                    ->label('Driver conflicts')
+                    ->query(fn ($query) => $query->whereHas('driver', function ($driverQuery) {
+                        $driverQuery->whereHas('loads', function ($q) {
+                            $q->whereNotIn('status', ['delivered', 'completed', 'cancelled']);
+                        });
+                    })),
                 SelectFilter::make('status')
                     ->options([
                         'draft' => 'Draft',
@@ -142,6 +177,38 @@ class DispatchBoardTable extends Component implements HasActions, HasSchemas, Ha
             ])
             ->emptyStateHeading('No loads found')
             ->emptyStateDescription('Try adjusting filters or create a new load.');
+    }
+
+    protected function lastCheckCallAgo(Load $load): ?string
+    {
+        $last = optional($load->checkCalls()->latest('reported_at')->first())->reported_at;
+        if (!$last) {
+            return 'No check-calls';
+        }
+        return $last->diffForHumans();
+    }
+
+    protected function hasDriverConflict(Load $load): bool
+    {
+        $driverId = $load->driver_id;
+        if (!$driverId) {
+            return false;
+        }
+
+        return Load::query()
+            ->where('driver_id', $driverId)
+            ->whereNotIn('status', ['delivered', 'completed', 'cancelled'])
+            ->where('id', '<>', $load->id)
+            ->exists();
+    }
+
+    protected function noRecentCheckCall(Load $load): bool
+    {
+        $last = optional($load->checkCalls()->latest('reported_at')->first())->reported_at;
+        if (!$last) {
+            return true;
+        }
+        return $last->lt(now()->subHours(12));
     }
 
     public function render(): View

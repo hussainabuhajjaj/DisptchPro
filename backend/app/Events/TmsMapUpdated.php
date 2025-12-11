@@ -15,11 +15,13 @@ class TmsMapUpdated implements ShouldBroadcastNow
 
     public string $type;
     public ?int $loadId;
+    public array $payload;
 
-    public function __construct(string $type = 'refresh', ?int $loadId = null)
+    public function __construct(string $type = 'refresh', ?int $loadId = null, array $payload = [])
     {
         $this->type = $type;
         $this->loadId = $loadId;
+        $this->payload = $payload;
     }
 
     public function broadcastOn(): Channel
@@ -37,6 +39,7 @@ class TmsMapUpdated implements ShouldBroadcastNow
         return [
             'type' => $this->type,
             'load_id' => $this->loadId,
+            'payload' => $this->payload,
         ];
     }
 }

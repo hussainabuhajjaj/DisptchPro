@@ -15,16 +15,19 @@ class Document extends Model
         'documentable_type',
         'documentable_id',
         'type',
+        'category',
         'file_path',
         'original_name',
         'mime_type',
         'size',
         'uploaded_by',
         'uploaded_at',
+        'metadata',
     ];
 
     protected $casts = [
         'uploaded_at' => 'datetime',
+        'metadata' => 'array',
     ];
 
     public function documentable()

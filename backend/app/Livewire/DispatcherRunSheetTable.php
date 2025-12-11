@@ -47,6 +47,8 @@ class DispatcherRunSheetTable extends Component implements HasActions, HasSchema
                     ->url(fn ($record) => $record->loadRelation ? route('filament.admin.resources.loads.edit', $record->loadRelation) : null, shouldOpenInNewTab: true)
                     ->placeholder('—')
                     ->description(fn ($record) => $record->loadRelation ? 'Status: ' . ucfirst(str_replace('_', ' ', $record->loadRelation->status)) : null)
+                    ->badge(fn ($record) => $this->slaBadge($record))
+                    ->icon(fn ($record) => $this->slaIcon($record))
                     ->sortable(),
                 TextColumn::make('loadRelation.dispatcher.name')
                     ->label('Dispatcher')
@@ -120,11 +122,63 @@ class DispatcherRunSheetTable extends Component implements HasActions, HasSchema
                         ->distinct()
                         ->pluck('type', 'type')
                         ->toArray()),
+                Filter::make('late')
+                    ->label('Late')
+                    ->query(fn ($query) => $query
+                        ->whereHas('loadRelation', fn ($q) => $q
+                            ->whereHas('stops', function ($qs) {
+                                $qs->where('type', 'delivery')->whereDate('date_from', '<', now()->toDateString());
+                            })
+                            ->whereNotIn('status', ['delivered', 'completed'])
+                        )),
+                Filter::make('at_risk')
+                    ->label('At risk (next 6h)')
+                    ->query(fn ($query) => $query
+                        ->whereHas('loadRelation', fn ($q) => $q
+                            ->whereHas('stops', function ($qs) {
+                                $qs->where('type', 'delivery')
+                                    ->whereDate('date_from', '<=', now()->addHours(6)->toDateString());
+                            })
+                            ->whereNotIn('status', ['delivered', 'completed'])
+                        )),
             ]);
     }
 
     public function render(): View
     {
         return view('livewire.dispatcher-run-sheet-table');
+    }
+
+    protected function slaBadge($record): ?array
+    {
+        $load = $record->loadRelation;
+        if (!$load) {
+            return null;
+        }
+
+        $status = $load->route_status;
+        if ($status === 'late') {
+            return ['color' => 'danger', 'text' => 'Late'];
+        }
+        if ($status === 'at_risk') {
+            return ['color' => 'warning', 'text' => 'At Risk'];
+        }
+        return null;
+    }
+
+    protected function slaIcon($record): ?string
+    {
+        $load = $record->loadRelation;
+        if (!$load) {
+            return null;
+        }
+        $status = $load->route_status;
+        if ($status === 'late') {
+            return 'heroicon-o-exclamation-triangle';
+        }
+        if ($status === 'at_risk') {
+            return 'heroicon-o-clock';
+        }
+        return 'heroicon-o-check-circle';
     }
 }

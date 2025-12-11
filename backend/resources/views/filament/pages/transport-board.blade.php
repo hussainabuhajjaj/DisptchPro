@@ -42,6 +42,8 @@
                 background: var(--tms-bg);
                 padding: 14px;
                 box-shadow: 0 5px 18px rgba(0,0,0,0.03);
+                position: relative;
+                z-index: 0;
             }
             .tms-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--tms-muted); }
             .tms-filter-bar { border: 1px solid var(--tms-border); border-radius: var(--tms-card-radius); padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--tms-bg); }
@@ -64,7 +66,9 @@
             .tms-load-card:hover { border-color: var(--tms-primary); box-shadow: 0 6px 16px rgba(37,99,235,0.12); }
             .tms-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
             .tms-kv { font-size: 12px; color: var(--tms-muted); }
-            #tms-map { min-height: 520px; border: 1px solid var(--tms-border); border-radius: var(--tms-card-radius); overflow: hidden; }
+            .tms-map-shell { position: relative; z-index: 0; width: 100%; max-width: 100%; }
+            #tms-map { min-height: 520px; border: 1px solid var(--tms-border); border-radius: var(--tms-card-radius); overflow: hidden; width: 100%; max-width: 100%; position: relative; z-index: 1; }
+            .leaflet-container { z-index: 1; }
             .tms-legend-toggle { cursor: pointer; color: var(--tms-primary); font-size: 12px; }
             .tms-hidden { display: none !important; }
             .tms-highlight { border-color: var(--tms-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.3); }
@@ -129,6 +133,10 @@
                 background: #fff7ed;
                 color:#7c2d12;
                 box-shadow:0 4px 14px rgba(0,0,0,0.04);
+            }
+            @media (max-width: 1023px) {
+                .tms-split { grid-template-columns: 1fr !important; }
+                .tms-card, .tms-map-shell, #tms-map { max-width: 100vw; }
             }
         </style>
     @endpush
@@ -1476,7 +1484,7 @@
 
     <x-filament::section heading="Map & Loads" description="Select a load to focus and manage dispatch actions.">
         <div class="tms-split">
-            <div class="tms-card overflow-hidden">
+            <div class="tms-card overflow-hidden tms-map-shell">
                 <div class="border-b px-4 py-3 flex items-center justify-between">
                     <div class="text-sm font-semibold">Route map</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">Leaflet + OSM</div>

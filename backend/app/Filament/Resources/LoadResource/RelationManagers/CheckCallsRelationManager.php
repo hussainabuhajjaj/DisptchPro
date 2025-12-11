@@ -15,6 +15,7 @@ use App\Notifications\LoadAlertNotification;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
+use Illuminate\Support\Facades\Http;
 
 class CheckCallsRelationManager extends RelationManager
 {
@@ -64,7 +65,7 @@ class CheckCallsRelationManager extends RelationManager
                         $this->applyStatusTransition($load, $call->status);
                         Cache::forget('tms-map-data');
                         broadcast(new TmsMapUpdated());
-                        $this->notifyIfNeeded($load, $call->status);
+                        $this->notifyIfNeeded($load, $call->status, $call->note);
                         return $call;
                     }),
             ])
@@ -123,7 +124,7 @@ class CheckCallsRelationManager extends RelationManager
         $load->saveQuietly();
     }
 
-    protected function notifyIfNeeded(Load $load, string $status): void
+    protected function notifyIfNeeded(Load $load, string $status, ?string $note = null): void
     {
         if (!in_array($status, ['issue', 'delayed'])) {
             return;
@@ -142,8 +143,12 @@ class CheckCallsRelationManager extends RelationManager
 
         $webhook = config('services.slack.webhook_url') ?? env('SLA_SLACK_WEBHOOK');
         if ($webhook) {
-            \Illuminate\Support\Facades\Http::post($webhook, [
-                'text' => "Load {$load->load_number} flagged: {$status}",
+            $text = "Load {$load->load_number} flagged: {$status}";
+            if ($note) {
+                $text .= " | Note: {$note}";
+            }
+            Http::post($webhook, [
+                'text' => $text,
             ]);
         }
     }

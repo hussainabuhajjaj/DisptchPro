@@ -5,4 +5,5 @@ return [
     App\Providers\EventServiceProvider::class,
     App\Providers\BroadcastServiceProvider::class,
     App\Providers\Filament\AdminPanelProvider::class,
+    App\Providers\Filament\DriverPanelProvider::class,
 ];

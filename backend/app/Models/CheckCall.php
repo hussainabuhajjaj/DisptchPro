@@ -15,17 +15,25 @@ class CheckCall extends Model
         'load_id',
         'user_id',
         'status',
+        'event_code',
         'note',
         'reported_at',
+        'recorded_at',
+        'lat',
+        'lng',
+        'location_source',
     ];
 
     protected $casts = [
         'reported_at' => 'datetime',
+        'recorded_at' => 'datetime',
+        'lat' => 'float',
+        'lng' => 'float',
     ];
 
     public function loadRelation()
     {
-        return $this->belongsTo(Load::class);
+        return $this->belongsTo(Load::class, 'load_id');
     }
 
     public function user()

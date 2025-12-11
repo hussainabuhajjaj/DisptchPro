@@ -34,11 +34,14 @@ class CarrierResource extends Resource
                 ->schema([
                     Grid::make(2)->schema([
                         Forms\Components\TextInput::make('name')->required(),
+                        Forms\Components\TextInput::make('legal_name')->label('Legal Name'),
+                        Forms\Components\TextInput::make('dba_name')->label('DBA'),
                         Forms\Components\TextInput::make('dispatcher_contact'),
                         Forms\Components\TextInput::make('phone'),
                         Forms\Components\TextInput::make('email')->email(),
-                        Forms\Components\TextInput::make('MC_number'),
-                        Forms\Components\TextInput::make('DOT_number'),
+                        Forms\Components\TextInput::make('mc_number')->label('MC #'),
+                        Forms\Components\TextInput::make('usd_ot_number')->label('USDOT #'),
+                        Forms\Components\TextInput::make('DOT_number')->label('Legacy DOT #'),
                         Forms\Components\Select::make('onboarding_status')
                             ->options([
                                 'new' => 'New',
@@ -47,6 +50,13 @@ class CarrierResource extends Resource
                                 'blacklisted' => 'Blacklisted',
                             ])
                             ->default('new'),
+                    ]),
+                ]),
+            Section::make('Compliance & Safety')
+                ->schema([
+                    Grid::make(2)->schema([
+                        Forms\Components\TextInput::make('safety_rating'),
+                        Forms\Components\TextInput::make('safer_profile_url')->url()->label('SAFER URL'),
                     ]),
                 ]),
             Section::make('Address')
@@ -62,9 +72,23 @@ class CarrierResource extends Resource
             Section::make('Insurance & Factoring')
                 ->schema([
                     Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('insurance_company'),
-                        Forms\Components\TextInput::make('insurance_policy_number'),
-                        Forms\Components\DatePicker::make('insurance_expiry'),
+                        Forms\Components\TextInput::make('insurance_primary_name')->label('Insurer'),
+                        Forms\Components\TextInput::make('insurance_policy_number')->label('Policy #'),
+                        Forms\Components\DatePicker::make('insurance_expires_at')->label('Insurance expires'),
+                        Forms\Components\Select::make('insurance_coverage_types')
+                            ->multiple()
+                            ->options([
+                                'auto_liab' => 'Auto Liability',
+                                'cargo' => 'Cargo',
+                                'general_liab' => 'General Liability',
+                                'workers_comp' => 'Workers Comp',
+                                'other' => 'Other',
+                            ]),
+                        Forms\Components\KeyValue::make('insurance_limits')
+                            ->label('Coverage limits')
+                            ->keyLabel('Coverage')
+                            ->valueLabel('Limit')
+                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('payment_terms'),
                         Forms\Components\Toggle::make('auto_apply_credit')->label('Auto-apply credits'),
                         Forms\Components\TextInput::make('credit_expiry_days')->numeric()->label('Credit expiry (days)'),
@@ -78,6 +102,7 @@ class CarrierResource extends Resource
                     Grid::make(2)->schema([
                         FileUpload::make('w9_path')->label('W9')->directory('carrier-docs'),
                         FileUpload::make('coi_path')->label('COI')->directory('carrier-docs'),
+                        FileUpload::make('coi_document_path')->label('COI (Compliance)')->directory('carrier-docs'),
                         FileUpload::make('carrier_packet_path')->label('Carrier Packet')->directory('carrier-docs'),
                         FileUpload::make('contract_path')->label('Contract')->directory('carrier-docs'),
                     ]),
@@ -94,9 +119,9 @@ class CarrierResource extends Resource
             ->striped()
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('MC_number'),
-                Tables\Columns\TextColumn::make('DOT_number'),
-                Tables\Columns\TextColumn::make('insurance_expiry')->date()->sortable(),
+                Tables\Columns\TextColumn::make('mc_number')->label('MC #'),
+                Tables\Columns\TextColumn::make('usd_ot_number')->label('USDOT #'),
+                Tables\Columns\TextColumn::make('insurance_expires_at')->date()->sortable(),
                 Tables\Columns\TextColumn::make('onboarding_status')
                     ->badge()
                     ->colors([
@@ -122,10 +147,10 @@ class CarrierResource extends Resource
                     'blacklisted' => 'Blacklisted',
                 ]),
                 Tables\Filters\Filter::make('insurance_expiring')
-                    ->label('Insurance expiring < 14d')
+                    ->label('Insurance expiring < 30d')
                     ->query(fn ($query) => $query
-                        ->whereNotNull('insurance_expiry')
-                        ->whereDate('insurance_expiry', '<=', now()->addDays(14))),
+                        ->whereNotNull('insurance_expires_at')
+                        ->whereDate('insurance_expires_at', '<=', now()->addDays(30))),
             ])
             ->emptyStateHeading('No carriers yet')
             ->emptyStateDescription('Add carriers to track onboarding status and docs.')

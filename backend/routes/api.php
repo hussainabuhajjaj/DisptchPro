@@ -13,6 +13,12 @@ use App\Http\Controllers\Api\ClientApiController;
 use App\Http\Controllers\Api\DriverApiController;
 use App\Http\Controllers\Api\LeadCaptureController;
 use App\Http\Controllers\Api\PipelineFlowController;
+use App\Http\Controllers\Api\DriverCheckCallController;
+use App\Http\Controllers\Api\DriverAuthController;
+use App\Http\Controllers\Api\DriverLocationController;
+use App\Http\Controllers\Api\DriverJobsController;
+use App\Http\Controllers\Api\MapDataController;
+use App\Http\Controllers\Api\DriverPodController;
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -65,8 +71,33 @@ Route::post('carrier-profile', [CarrierProfileController::class, 'store'])
 Route::post('leads', [LeadCaptureController::class, 'store'])
     ->middleware('throttle:30,1');
 
+// Driver token auth
+Route::post('driver/auth', [DriverAuthController::class, 'store'])
+    ->middleware('throttle:20,1');
+Route::post('driver/token', [DriverAuthController::class, 'rotate'])
+    ->middleware('throttle:20,1');
+
+// Driver-facing check-calls & document upload
+Route::post('driver/check-calls', [DriverCheckCallController::class, 'store'])
+    ->middleware('throttle:driver-status');
+
+// Driver location updates (live tracking)
+Route::post('driver/location', [DriverLocationController::class, 'store'])
+    ->middleware('throttle:driver-location');
+Route::post('driver/pod', [DriverPodController::class, 'store'])
+    ->middleware('throttle:driver-status');
+
+// Driver job list and status updates
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('driver/jobs', [DriverJobsController::class, 'index'])->middleware('throttle:driver-jobs');
+    Route::post('driver/jobs/{load}/status', [DriverJobsController::class, 'updateStatus'])->middleware('throttle:driver-status');
+});
+
 // Pipeline graph for FlowForge/visual builder (admin/staff)
 Route::middleware(['auth:sanctum', 'role:admin|staff'])->group(function () {
     Route::get('pipeline/flow', [PipelineFlowController::class, 'show']);
     Route::post('pipeline/flow', [PipelineFlowController::class, 'store']);
+
+    // Map data (admin/staff)
+    Route::get('map-data', [MapDataController::class, 'index']);
 });

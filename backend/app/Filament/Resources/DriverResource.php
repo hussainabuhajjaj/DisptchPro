@@ -35,6 +35,11 @@ class DriverResource extends Resource
                         Forms\Components\TextInput::make('name')->required(),
                         Forms\Components\TextInput::make('phone'),
                         Forms\Components\TextInput::make('email')->email(),
+                        Forms\Components\TextInput::make('password')
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255)
+                            ->helperText('Leave blank to keep current password.'),
                         Forms\Components\TextInput::make('address')->columnSpan(2),
                         Forms\Components\Select::make('status')->options([
                             'active' => 'Active',
@@ -54,6 +59,18 @@ class DriverResource extends Resource
                     Grid::make(2)->schema([
                         Forms\Components\TextInput::make('CDL_type'),
                         Forms\Components\TagsInput::make('endorsements'),
+                    ]),
+                ]),
+            Section::make('Compliance & Tracking')
+                ->schema([
+                    Grid::make(2)->schema([
+                        Forms\Components\Toggle::make('hazmat_endorsement')->label('Hazmat endorsed'),
+                        Forms\Components\Toggle::make('tracking_opt_in')->label('Tracking opt-in')->default(true),
+                    ]),
+                    Grid::make(3)->schema([
+                        Forms\Components\TextInput::make('eld_device_id')->label('ELD Device ID'),
+                        Forms\Components\TextInput::make('hos_provider')->label('HOS Provider'),
+                        Forms\Components\DateTimePicker::make('hos_last_import_at')->label('HOS Last Import'),
                     ]),
                 ]),
             Section::make('Emergency & notes')

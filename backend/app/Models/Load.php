@@ -11,6 +11,7 @@ use App\Models\InvoiceItem;
 use App\Models\Settlement;
 use App\Models\SettlementItem;
 use Illuminate\Support\Arr;
+use App\Models\Accessorial;
 
 class Load extends Model
 {
@@ -37,22 +38,40 @@ class Load extends Model
         'equipment_requirements',
         'reference_numbers',
         'status',
+        'lifecycle_status',
         'internal_notes',
         'driver_notes',
+        'hazmat_flag',
+        'hazmat_details',
+        'weight_axle_limits',
         'route_polyline',
         'route_distance_km',
         'route_duration_hr',
+        'last_lat',
+        'last_lng',
+        'last_location_at',
+        'last_eta_minutes',
+        'rate_confirmed_at',
     ];
 
     protected $casts = [
         'accessorial_charges' => 'array',
         'reference_numbers' => 'array',
+        'weight_axle_limits' => 'array',
         'route_polyline' => 'array',
         'route_distance_km' => 'decimal:2',
         'route_duration_hr' => 'decimal:2',
         'pickup_actual_at' => 'datetime',
         'delivery_actual_at' => 'datetime',
+        'last_location_at' => 'datetime',
+        'hazmat_flag' => 'boolean',
+        'rate_confirmed_at' => 'datetime',
     ];
+
+    public function accessorials()
+    {
+        return $this->hasMany(Accessorial::class);
+    }
 
     protected static function booted()
     {
@@ -90,6 +109,9 @@ class Load extends Model
     public function invoices() { return $this->belongsToMany(Invoice::class)->withPivot('line_amount', 'description')->withTimestamps(); }
     public function documents() { return $this->morphMany(Document::class, 'documentable'); }
     public function checkCalls() { return $this->hasMany(CheckCall::class); }
+    public function locations() { return $this->hasMany(LoadLocation::class); }
+    public function pods() { return $this->hasMany(Pod::class); }
+    public function accessorialItems() { return $this->hasMany(Accessorial::class); }
 
     public function getRevenueAttribute(): float
     {

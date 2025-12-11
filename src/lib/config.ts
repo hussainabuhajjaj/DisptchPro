@@ -1,6 +1,6 @@
 const isProd = process.env.NODE_ENV === "production";
-// Default API base: in prod point to live host, in dev fallback to local backend.
-const defaultBase = isProd ? "https://hadispatch.com/api" : "http://127.0.0.1:8000/api";
+// Default API base: in prod point to the API subdomain, in dev fallback to local backend.
+const defaultBase = isProd ? "https://api.hadispatch.com/api" : "http://127.0.0.1:8000/api";
 
 export const apiConfig = {
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || defaultBase,

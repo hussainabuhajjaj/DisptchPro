@@ -18,8 +18,10 @@ return new class extends Migration {
             $table->string('reference_code', 20)->nullable()->unique()->after('id');
         });
 
-        // Make user_id nullable without requiring doctrine/dbal
-        DB::statement('ALTER TABLE carrier_drafts MODIFY user_id BIGINT UNSIGNED NULL');
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            // Make user_id nullable without requiring doctrine/dbal (skip on sqlite tests)
+            DB::statement('ALTER TABLE carrier_drafts MODIFY user_id BIGINT UNSIGNED NULL');
+        }
 
         Schema::table('carrier_drafts', function (Blueprint $table) {
             $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
@@ -52,7 +54,9 @@ return new class extends Migration {
             $table->dropColumn('reference_code');
         });
 
-        DB::statement('ALTER TABLE carrier_drafts MODIFY user_id BIGINT UNSIGNED NOT NULL');
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE carrier_drafts MODIFY user_id BIGINT UNSIGNED NOT NULL');
+        }
 
         Schema::table('carrier_drafts', function (Blueprint $table) {
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
