@@ -862,9 +862,10 @@ export default function CarrierProfileForm() {
     console.log('Form data submitted, preparing for Laravel API:', data);
 
     const apiBaseUrl =
-      process.env.NODE_ENV === 'production'
-        ? process.env.NEXT_PUBLIC_API_BASE_URL
-        : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      (process.env.NODE_ENV === 'production'
+        ? 'https://api.hadispatch.com/api'
+        : 'http://127.0.0.1:8000/api');
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 

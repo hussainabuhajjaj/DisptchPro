@@ -22,9 +22,13 @@ export class ApiError extends Error {
 
 function buildUrl(path: string, query?: RequestOptions["query"]) {
   assertApiConfig();
+  // Always prefer an explicit API base. Avoid falling back to window.origin to prevent
+  // accidentally calling the marketing domain or localhost in static exports.
   const runtimeBase =
     apiConfig.baseUrl?.trim() ||
-    (typeof window !== "undefined" ? window.location.origin : "http://127.0.0.1:8000/api");
+    (process.env.NODE_ENV === "production"
+      ? "https://api.hadispatch.com/api"
+      : "http://127.0.0.1:8000/api");
 
   const normalizedBase = runtimeBase.endsWith("/") ? runtimeBase : `${runtimeBase}/`;
   const url = new URL(path.replace(/^\//, ""), normalizedBase);
