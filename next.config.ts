@@ -65,6 +65,24 @@ const nextConfig: NextConfig = {
         port: '8000',
         pathname: '/storage/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'hadispatch.com',
+        port: '',
+        pathname: '/storage/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.hadispatch.com',
+        port: '',
+        pathname: '/storage/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.hadispatch.com',
+        port: '',
+        pathname: '/storage/**',
+      },
     ],
   },
 };

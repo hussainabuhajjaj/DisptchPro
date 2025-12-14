@@ -1,0 +1,85 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Install dependencies (backend)
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: Cache config/routes
+        run: php artisan config:clear && php artisan route:clear
+
+      - name: Package backend artifact
+        run: |
+          tar -czf ../backend-build.tar.gz .
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend-build.tar.gz
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+
+      - name: Install dependencies (frontend)
+        run: npm ci
+
+      - name: Build Next.js
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_UMAMI_SCRIPT_URL: ${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
+          NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
+        run: npm run build
+
+      - name: Package frontend artifact
+        run: |
+          tar -czf out-build.tar.gz ./.next ./public ./next.config.js ./next.config.ts ./package.json ./package-lock.json
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: out-build.tar.gz
+
+# Add a deploy job that downloads the artifacts and pushes them to your server (SSH/rsync/FTP).
+# Example (rsync over SSH):
+#  deploy:
+#    needs: [backend, frontend]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/download-artifact@v4
+#        with:
+#          name: backend-build
+#      - uses: actions/download-artifact@v4
+#        with:
+#          name: frontend-build
+#      - name: Deploy to server
+#        run: |
+#          rsync -avz backend-build.tar.gz user@server:/path/
+#          rsync -avz out-build.tar.gz user@server:/path/
+#        env:
+#          RSYNC_PASSWORD: ${{ secrets.RSYNC_PASSWORD }}
