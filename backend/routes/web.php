@@ -16,6 +16,9 @@ use App\Http\Controllers\DriverPortalController;
 use App\Http\Middleware\DriverSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     return view('welcome');
@@ -164,4 +167,48 @@ Route::middleware(['web', 'auth'])->get('/admin/documents/settlements/{settlemen
 // Simple health check (unauthenticated)
 Route::get('/health', function () {
     return response()->json(['ok' => true, 'status' => 'up']);
+});
+
+// Extended health check (compatible with Laravel's /up path)
+Route::get('/up', function () {
+    $checks = [
+        'app' => true,
+        'db' => false,
+        'cache' => false,
+        'storage' => false,
+        'queue' => config('queue.default'),
+        'cors' => [
+            'origins' => config('cors.allowed_origins'),
+            'patterns' => config('cors.allowed_origins_patterns'),
+        ],
+    ];
+    $messages = [];
+
+    try {
+        DB::connection()->getPdo();
+        $checks['db'] = true;
+    } catch (\Throwable $e) {
+        $messages[] = 'db:' . $e->getMessage();
+    }
+
+    try {
+        Cache::store()->put('health_ping', 'ok', 5);
+        $checks['cache'] = Cache::store()->get('health_ping') === 'ok';
+    } catch (\Throwable $e) {
+        $messages[] = 'cache:' . $e->getMessage();
+    }
+
+    try {
+        $checks['storage'] = is_writable(storage_path('app'));
+    } catch (\Throwable $e) {
+        $messages[] = 'storage:' . $e->getMessage();
+    }
+
+    $status = collect($checks)->every(fn ($val) => $val === true || $val === config('queue.default'));
+
+    return response()->json([
+        'ok' => $status,
+        'checks' => $checks,
+        'messages' => $messages,
+    ], $status ? 200 : 503);
 });
