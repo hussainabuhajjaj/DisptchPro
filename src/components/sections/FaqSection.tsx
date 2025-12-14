@@ -2,6 +2,7 @@
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 
 type FaqItem = { question: string; answer: string };
 
@@ -34,30 +35,49 @@ export default function FaqSection({
   subtitle = "Find answers to common questions about our dispatch services.",
   faqs = defaultFaqs,
 }: FaqSectionProps) {
+  const [hydrated, setHydrated] = useState(false);
   const list = faqs?.length ? faqs : defaultFaqs;
 
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   return (
-    <section id="faq" className="w-full py-20 md:py-24 bg-[#eaf3fb]">
+    <section
+      id="faq"
+      className="w-full py-20 md:py-24 bg-[#eaf3fb] text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+    >
       <div className="container mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <span className="text-sm font-semibold tracking-[0.08em] uppercase text-primary">
             Support
           </span>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mt-2">{title}</h2>
-          <p className="mt-4 text-lg text-muted-foreground">{subtitle}</p>
+          <p className="mt-4 text-lg text-muted-foreground dark:text-slate-300">{subtitle}</p>
         </div>
-        <Card className="max-w-3xl mx-auto shadow-xl rounded-2xl border border-muted/60">
+        <Card className="max-w-3xl mx-auto shadow-xl rounded-2xl border border-muted/60 dark:border-slate-700 dark:bg-slate-800">
           <CardContent className="p-6">
-            <Accordion type="single" collapsible className="w-full">
-              {list.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-lg text-left">{faq.question}</AccordionTrigger>
-                  <AccordionContent className="text-base text-muted-foreground pl-4 border-l border-primary/30">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            {hydrated ? (
+              <Accordion type="single" collapsible className="w-full">
+                {list.map((faq, index) => (
+                  <AccordionItem key={index} value={`item-${index}`}>
+                    <AccordionTrigger className="text-lg text-left">{faq.question}</AccordionTrigger>
+                    <AccordionContent className="text-base text-muted-foreground dark:text-slate-300 pl-4 border-l border-primary/30 dark:border-primary/40">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="space-y-4">
+                {list.map((faq, index) => (
+                  <div key={index} className="border-b border-muted/60 pb-3">
+                    <p className="text-lg font-semibold">{faq.question}</p>
+                    <p className="text-base text-muted-foreground dark:text-slate-300 mt-2">{faq.answer}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

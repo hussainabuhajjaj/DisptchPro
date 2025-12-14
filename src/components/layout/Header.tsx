@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { fetchSiteSettings, SiteSettings } from "@/lib/site-settings";
@@ -104,6 +105,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [settings, setSettings] = useState<SiteSettings>({});
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -115,6 +117,10 @@ export default function Header() {
 
   useEffect(() => {
     fetchSiteSettings().then(setSettings).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -154,6 +160,66 @@ export default function Header() {
   const contactPhone = settings.contact_phone || "+1 (234) 567-890";
   const contactEmail = settings.contact_email || "contact@hadispatch.com";
   const supportText = settings.topbar_text || "24/7 Dispatch Support";
+
+  const flatNavLinks = mainNavLinks.flatMap((link) =>
+    "items" in link ? link.items : [link],
+  );
+
+  // Render a hydration-safe header without Radix IDs for the initial pass; swap to the interactive
+  // version on the client once mounted to avoid Turbopack/Radix useId mismatches.
+  if (!hydrated) {
+    return (
+      <header className="sticky top-0 z-50 w-full">
+        <div className="hidden md:block bg-[#0f3750] text-white">
+          <div className="container mx-auto flex h-9 items-center justify-between px-4 md:px-6 text-sm">
+            <span className="font-semibold tracking-tight">{supportText}</span>
+            <div className="flex items-center gap-5">
+              <a href={`tel:${contactPhone}`} className="flex items-center gap-1 hover:underline">
+                <Phone className="h-4 w-4" />
+                <span>{contactPhone}</span>
+              </a>
+              <a href={`mailto:${contactEmail}`} className="flex items-center gap-1 hover:underline">
+                <Mail className="h-4 w-4" />
+                <span>{contactEmail}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div
+          className={cn(
+            "border-b border-transparent transition-all duration-300 bg-background/90 backdrop-blur-xl",
+            isScrolled ? "border-border/80 shadow-sm" : "",
+          )}
+        >
+          <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+            <Link href="/" className="flex items-center gap-2">
+              <Truck className="h-6 w-6 text-primary" />
+              <span className="font-bold text-lg text-foreground">{brand}</span>
+            </Link>
+
+            <nav className="hidden items-center gap-6 md:flex">
+              {flatNavLinks.map((link) => (
+                <NavLink key={link.href} {...link} active={activeId ? link.href.endsWith(`#${activeId}`) : false} />
+              ))}
+            </nav>
+
+            <div className="hidden md:flex items-center gap-3">
+              <Button asChild className="shadow-md">
+                <Link href="/#book">Book a Call</Link>
+              </Button>
+              <ThemeToggle allowToggle defaultMode="system" />
+            </div>
+
+            <div className="md:hidden">
+              <Link href="/#book" className="text-sm font-semibold text-primary underline">
+                Book
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -199,12 +265,10 @@ export default function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Button asChild variant="outline" className="border-primary/40 text-foreground hover:text-primary">
-              <Link href="/login">Carrier Login</Link>
-            </Button>
             <Button asChild className="shadow-md">
               <Link href="/#book">Book a Call</Link>
             </Button>
+            <ThemeToggle allowToggle defaultMode="system" />
           </div>
 
           <div className="md:hidden">

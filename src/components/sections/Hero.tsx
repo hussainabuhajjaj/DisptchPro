@@ -84,7 +84,7 @@ export default function Hero({
                   asChild
                   size="lg"
                   variant="outline"
-                  className="font-semibold border-white/70 text-white hover:text-white hover:bg-white/10"
+                  className="font-semibold border-white/70 text-white bg-transparent hover:text-white hover:bg-white/10"
                 >
                   <Link href={ctaSecondaryHref} data-umami-event="hero-secondary-cta">
                     {ctaSecondaryLabel}

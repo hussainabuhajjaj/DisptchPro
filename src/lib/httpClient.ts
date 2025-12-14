@@ -22,15 +22,11 @@ export class ApiError extends Error {
 
 function buildUrl(path: string, query?: RequestOptions["query"]) {
   assertApiConfig();
-  // Always prefer an explicit API base. Avoid falling back to window.origin to prevent
-  // accidentally calling the marketing domain or localhost in static exports.
-  const runtimeBase =
-    apiConfig.baseUrl?.trim() ||
-    (process.env.NODE_ENV === "production"
-      ? "https://api.hadispatch.com/api"
-      : "http://127.0.0.1:8000/api");
+  if (!apiConfig.baseUrl) {
+    throw new Error("API base URL missing; set NEXT_PUBLIC_API_BASE_URL.");
+  }
 
-  const normalizedBase = runtimeBase.endsWith("/") ? runtimeBase : `${runtimeBase}/`;
+  const normalizedBase = apiConfig.baseUrl.endsWith("/") ? apiConfig.baseUrl : `${apiConfig.baseUrl}/`;
   const url = new URL(path.replace(/^\//, ""), normalizedBase);
 
   if (query) {

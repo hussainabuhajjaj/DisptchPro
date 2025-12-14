@@ -36,14 +36,17 @@ export default function Services({
   items = defaultServices,
 }: ServicesProps) {
   return (
-    <section id="services" className="w-full py-20 md:py-24 bg-[#eaf3fb]">
+    <section
+      id="services"
+      className="w-full py-20 md:py-24 bg-[#eaf3fb] text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+    >
       <div className="container mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <span className="text-sm font-semibold tracking-[0.08em] uppercase text-primary">
             Services
           </span>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mt-2">{title}</h2>
-          <p className="mt-4 text-lg text-muted-foreground">{subtitle}</p>
+          <p className="mt-4 text-lg text-muted-foreground dark:text-slate-300">{subtitle}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {items.map((service, index) => {
@@ -51,14 +54,14 @@ export default function Services({
             return (
               <Card
                 key={service.title + index}
-                className="flex flex-col items-start p-6 bg-card rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border-primary/40"
+                className="flex flex-col items-start p-6 bg-card rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border-primary/40 dark:bg-slate-800 dark:border-slate-700"
               >
                 <div className="mb-4 inline-flex items-center justify-center rounded-full bg-primary/10 text-primary h-12 w-12">
                   <Icon className="h-6 w-6" />
                 </div>
                 <CardHeader className="p-0">
                   <CardTitle className="text-xl font-semibold mb-2">{service.title}</CardTitle>
-                  <CardDescription className="text-base text-muted-foreground">
+                  <CardDescription className="text-base text-muted-foreground dark:text-slate-300">
                     {service.description}
                   </CardDescription>
                 </CardHeader>

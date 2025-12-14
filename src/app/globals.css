@@ -67,3 +67,23 @@
     font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   }
 }
+
+@layer components {
+  /* Dark-mode overrides for legacy slate utilities used in marketing sections */
+  .dark .bg-white { background-color: hsl(var(--card)) !important; }
+  .dark .bg-slate-50 { background-color: #1e293b !important; }
+  .dark .bg-gray-50 { background-color: #1f2937 !important; }
+  .dark .bg-gray-100 { background-color: #111827 !important; }
+  .dark .text-slate-900 { color: #e5e7eb !important; }
+  .dark .text-slate-800 { color: #e2e8f0 !important; }
+  .dark .text-slate-700 { color: #cbd5e1 !important; }
+  .dark .text-slate-600 { color: #cbd5e1 !important; }
+  .dark .text-slate-500 { color: #94a3b8 !important; }
+  .dark .text-gray-900 { color: #e5e7eb !important; }
+  .dark .text-gray-800 { color: #e2e8f0 !important; }
+  .dark .text-gray-700 { color: #d1d5db !important; }
+  .dark .text-gray-600 { color: #9ca3af !important; }
+  .dark .text-gray-500 { color: #9ca3af !important; }
+  .dark .border-slate-200 { border-color: #334155 !important; }
+  .dark .border-gray-200 { border-color: #374151 !important; }
+}

@@ -32,6 +32,10 @@ class DispatchBoardTable extends Component implements HasActions, HasSchemas, Ha
                 Load::query()
                     ->with(['client', 'carrier', 'driver', 'dispatcher', 'checkCalls'])
             )
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
+            ->persistSortInSession()
             ->defaultSort('id', 'desc')
             ->paginationPageOptions([25, 50, 100])
             ->columns([
@@ -144,11 +148,6 @@ class DispatchBoardTable extends Component implements HasActions, HasSchemas, Ha
                     ->label('Dispatcher')
                     ->options(fn () => User::query()->pluck('name', 'id'))
                     ->searchable(),
-                Filter::make('unassigned')
-                    ->label('Unassigned (carrier or driver)')
-                    ->query(fn ($query) => $query->where(function ($q) {
-                        $q->whereNull('carrier_id')->orWhereNull('driver_id');
-                    })),
                 Filter::make('late_only')
                     ->label('Late')
                     ->query(fn ($query) => $query

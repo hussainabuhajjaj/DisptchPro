@@ -47,12 +47,15 @@ export default function PricingSection() {
   const demoUrl = "https://www.youtube-nocookie.com/embed/C0DPdy98e4c";
 
   return (
-    <section id="pricing" className="w-full py-16 md:py-24 bg-[#f7f9fc]">
+    <section
+      id="pricing"
+      className="w-full py-16 md:py-24 bg-[#f7f9fc] text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+    >
       <div className="container mx-auto px-4 md:px-6 space-y-12">
         <div className="text-center space-y-3 max-w-3xl mx-auto">
           <span className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">Pricing & Demo</span>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">Transparent pricing, fast onboarding</h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground dark:text-slate-300">
             Start with a 14-day risk-free trial. Most carriers are rolling within 24 hours of kickoff.
           </p>
         </div>
@@ -62,16 +65,16 @@ export default function PricingSection() {
             <Card
               key={plan.name}
               className={`h-full flex flex-col shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl ${
-                plan.highlight ? "border-primary/50" : ""
-              }`}
+                plan.highlight ? "border-primary/50" : "dark:border-slate-700"
+              } dark:bg-slate-800`}
             >
               <CardHeader className="space-y-2">
                 <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <CardDescription className="text-base">{plan.desc}</CardDescription>
+                <CardDescription className="text-base dark:text-slate-300">{plan.desc}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4 flex-1">
                 <p className="text-2xl font-bold text-primary">{plan.price}</p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="space-y-2 text-sm text-muted-foreground dark:text-slate-300">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-primary mt-[2px]" />
@@ -99,15 +102,17 @@ export default function PricingSection() {
               allowFullScreen
             />
           </div>
-          <Card className="shadow-sm">
+          <Card className="shadow-sm dark:bg-slate-800 dark:border-slate-700">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PlayCircle className="h-5 w-5 text-primary" />
                 What’s inside the 90-second demo
               </CardTitle>
-              <CardDescription>See how we approve loads, handle paperwork, and send live updates.</CardDescription>
+              <CardDescription className="dark:text-slate-300">
+                See how we approve loads, handle paperwork, and send live updates.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground dark:text-slate-300">
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary mt-[2px]" />
                 <span>Lane intake → load approval → carrier packet submission workflow</span>
@@ -130,4 +135,3 @@ export default function PricingSection() {
     </section>
   );
 }
-

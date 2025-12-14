@@ -59,14 +59,34 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const themeVars = await loadThemeVars();
-  const umamiScript =
-    process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
-  const umamiSiteId =
-    process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || "f5ede6cd-d3de-4edc-8c39-460a08c091e6";
+  const umamiScript = process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL;
+  const umamiSiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
   const includeUmami = !!umamiScript && !!umamiSiteId;
 
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('ha-dispatch-theme');
+                  var mode = stored || 'system';
+                  if (mode === 'system') {
+                    var mql = window.matchMedia('(prefers-color-scheme: dark)');
+                    if (mql.matches) document.documentElement.classList.add('dark');
+                  } else if (mode === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={cn("min-h-screen bg-background font-sans antialiased", poppins.variable)}
         style={themeVars as CSSProperties}

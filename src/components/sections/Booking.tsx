@@ -28,6 +28,7 @@ export default function Booking() {
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     if (date && time) {
@@ -45,6 +46,10 @@ export default function Booking() {
       setDateTimeString(newDate.toISOString());
     }
   }, [date, time]);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const validate = (formData: FormData) => {
     const next: Record<string, string> = {};
@@ -151,16 +156,29 @@ export default function Booking() {
               />
                <div className="w-full max-w-xs space-y-2">
                 <Label htmlFor="time">Select a Time</Label>
-                <Select value={time} onValueChange={setTime}>
-                  <SelectTrigger id="time">
-                    <SelectValue placeholder="Select a time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map(slot => (
-                      <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                {hydrated ? (
+                  <Select value={time} onValueChange={setTime}>
+                    <SelectTrigger id="time">
+                      <SelectValue placeholder="Select a time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map(slot => (
+                        <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <select
+                    id="time"
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot}>{slot}</option>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </select>
+                )}
                </div>
               {errors.date && <p className="text-sm text-destructive">{errors.date}</p>}
             </div>

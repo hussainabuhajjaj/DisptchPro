@@ -34,7 +34,10 @@ export default function ForBrokers({
     ? { imageUrl, description: "For brokers", imageHint: "brokers" }
     : PlaceHolderImages.find((img) => img.id === "for-brokers");
   return (
-    <section id="for-brokers" className="w-full py-20 md:py-24 bg-[#eaf3fb]">
+    <section
+      id="for-brokers"
+      className="w-full py-20 md:py-24 bg-[#eaf3fb] text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+    >
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
            <div className="relative h-80 w-full rounded-2xl overflow-hidden shadow-xl order-last md:order-first">
@@ -49,7 +52,7 @@ export default function ForBrokers({
                     unoptimized
                 />
             )}
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-black/20 dark:bg-black/30" />
           </div>
           <div className="flex flex-col gap-6">
             <span className="text-sm font-semibold tracking-[0.08em] uppercase text-primary">
@@ -58,7 +61,7 @@ export default function ForBrokers({
             <h2 className="text-3xl md:text-4xl font-bold tracking-tighter">
               {title}
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground dark:text-slate-300">
               {subtitle}
             </p>
             <ul className="grid gap-3 text-lg">
@@ -77,7 +80,13 @@ export default function ForBrokers({
                   </Link>
                 </Button>
               )}
-              <Button asChild variant="outline" size="lg" data-umami-event="broker-secondary-cta">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-slate-200 text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                data-umami-event="broker-secondary-cta"
+              >
                 <Link href="#lead-magnet">Get the surge coverage playbook</Link>
               </Button>
             </div>
