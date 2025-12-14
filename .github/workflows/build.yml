@@ -56,30 +56,43 @@ jobs:
           NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
         run: npm run build
 
-      - name: Package frontend artifact
+      - name: Package frontend static export (out/)
         run: |
-          tar -czf out-build.tar.gz ./.next ./public ./next.config.js ./next.config.ts ./package.json ./package-lock.json
+          tar -czf out-build.tar.gz ./out ./next.config.js ./next.config.ts ./public ./package.json ./package-lock.json
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: out-build.tar.gz
 
-# Add a deploy job that downloads the artifacts and pushes them to your server (SSH/rsync/FTP).
-# Example (rsync over SSH):
-#  deploy:
-#    needs: [backend, frontend]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/download-artifact@v4
-#        with:
-#          name: backend-build
-#      - uses: actions/download-artifact@v4
-#        with:
-#          name: frontend-build
-#      - name: Deploy to server
-#        run: |
-#          rsync -avz backend-build.tar.gz user@server:/path/
-#          rsync -avz out-build.tar.gz user@server:/path/
-#        env:
-#          RSYNC_PASSWORD: ${{ secrets.RSYNC_PASSWORD }}
+  deploy-frontend:
+    needs: frontend
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: /tmp/frontend
+
+      - name: Extract artifact
+        run: |
+          cd /tmp/frontend
+          tar -xzf out-build.tar.gz
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy static site to public_html (rsync --delete)
+        run: |
+          rsync -avz --delete /tmp/frontend/out/ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/
+        env:
+          RSYNC_RSH: "ssh -o StrictHostKeyChecking=yes"

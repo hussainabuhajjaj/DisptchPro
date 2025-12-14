@@ -44,3 +44,4 @@ firebase-debug.log
 firestore-debug.log
 id_rsa.pub
 out.zip
+.github/workflows/build.yml
