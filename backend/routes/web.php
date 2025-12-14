@@ -204,7 +204,10 @@ Route::get('/up', function () {
         $messages[] = 'storage:' . $e->getMessage();
     }
 
-    $status = collect($checks)->every(fn ($val) => $val === true || $val === config('queue.default'));
+    $status = ($checks['app'] === true)
+        && ($checks['db'] === true)
+        && ($checks['cache'] === true)
+        && ($checks['storage'] === true);
 
     return response()->json([
         'ok' => $status,
