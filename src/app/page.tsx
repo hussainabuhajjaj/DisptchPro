@@ -4,6 +4,9 @@ import { fetchSiteSettings } from "@/lib/site-settings";
 import { LandingSection } from "@/lib/landing-content";
 import LeadMagnet from "@/components/sections/LeadMagnet";
 
+// Regenerate the landing page every 5 minutes to pick up backend content changes.
+export const revalidate = 300;
+
 const Hero = dynamic(() => import("@/components/sections/Hero"), { ssr: true });
 const Services = dynamic(() => import("@/components/sections/Services"), { ssr: true });
 const WhyChooseUs = dynamic(() => import("@/components/sections/WhyChooseUs"), { ssr: true });
